@@ -1,0 +1,9 @@
+services:
+  flask-server:
+    build: './backend'
+    ports:
+      - "5000:${API_PORT}"
+  angular-server:
+    build: './frontend'
+    ports:
+      - "4200:${USER_PORT}"
