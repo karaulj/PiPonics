@@ -1,5 +1,5 @@
 # Use python image
-FROM python:3.9.1-alpine
+FROM python:3.8.7
 
 # set workdir
 WORKDIR /flask-app
