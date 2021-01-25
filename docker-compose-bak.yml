@@ -1,5 +1,4 @@
 version: "3"
-
 volumes:
   sql:
 
@@ -20,13 +19,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "5432:5432"
 
   # flask-server:
   #   build: './backend'
   #   ports:
   #     - "5000:${API_PORT}"
-  #
   # angular-server:
   #   build: './frontend'
   #   ports:

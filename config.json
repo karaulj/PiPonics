@@ -1,3 +1,22 @@
 {
-  "key":"value"
+  "systems": [
+    "tanks": [
+      "fish-tank_1": {
+        "sensors": [
+          "water-sensor_1": {
+            "type": "pH"
+          }
+        ]
+      }
+    ],
+    "crops": [
+      "grow-bed_1": {
+        "actuators": {
+          "water-pump_1": {
+            "main": true
+          }
+        }
+      }
+    ]
+  ]
 }
