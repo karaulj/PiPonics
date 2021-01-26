@@ -1,22 +1,30 @@
 {
   "systems": [
-    "tanks": [
-      "fish-tank_1": {
-        "sensors": [
-          "water-sensor_1": {
-            "type": "pH"
-          }
-        ]
-      }
-    ],
-    "crops": [
-      "grow-bed_1": {
-        "actuators": {
-          "water-pump_1": {
-            "main": true
-          }
+    {
+      "name": "sys1",
+      "tanks": [
+        {
+          "name": "fish-tank1",
+          "nice_name": "Primary Fish Tank",
+          "sensors": [
+            {
+              "type": "pH"
+            }
+          ]
         }
-      }
-    ]
+      ],
+      "crops": [
+        {
+          "name": "grow-bed1",
+          "nice_name": "Primary Grow Bed",
+          "actuators": [
+            {
+              "type": "water-pump",
+              "main": true
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

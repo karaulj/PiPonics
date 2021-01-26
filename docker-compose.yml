@@ -2,6 +2,12 @@ version: "3"
 
 volumes:
   sql:
+  logs:
+    driver: local
+    driver_opts:
+      type: overlay2
+      device: ./logs
+      o: bind
 
 services:
   db-init:
@@ -9,25 +15,34 @@ services:
     volumes:
       - ./${CONFIG_FILE}:/home/${CONFIG_FILE}
       - sql:/sql
-
-  sql-server:
-    image: postgres:13.1
-    restart: always
-    volumes:
-      - sql:/docker-entrypoint-initdb.d
+      - logs:/logs
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      CONFIG_FILE: ${CONFIG_FILE}
 
-  # flask-server:
-  #   build: './backend'
+  # db:
+  #   image: postgres:13.1
+  #   restart: always
+  #   depends_on:
+  #     - "db-init"
+  #   volumes:
+  #     - sql:/docker-entrypoint-initdb.d
+  #   environment:
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   ports:
+  #     - "5432:${POSTGRES_PORT}"
+  # 
+  # backend:
+  #   build: './backend-server-flask'
+  #   depends_on:
+  #     - "db"
   #   ports:
   #     - "5000:${API_PORT}"
   #
-  # angular-server:
-  #   build: './frontend'
+  # frontend:
+  #   build: './frontend-server-angular'
+  #   depends_on:
+  #     - "backend"
   #   ports:
   #     - "4200:${USER_PORT}"
