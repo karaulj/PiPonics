@@ -2,12 +2,12 @@ version: "3"
 
 volumes:
   sql:
-  logs:
-    driver: local
-    driver_opts:
-      type: overlay2
-      device: ./logs
-      o: bind
+  # logs:
+  #   driver: local
+  #   driver_opts:
+  #     type: overlay2
+  #     device: ./logs
+  #     o: bind
 
 services:
   db-init:
@@ -32,7 +32,7 @@ services:
   #     POSTGRES_DB: ${POSTGRES_DB}
   #   ports:
   #     - "5432:${POSTGRES_PORT}"
-  # 
+  #
   # backend:
   #   build: './backend-server-flask'
   #   depends_on:
