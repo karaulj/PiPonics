@@ -33,6 +33,18 @@ def init_logging():
     logger.addHandler(consoleHandler)
 
 
+def get_sql_schema_create_str(schema_name):
+    return """
+DROP SCHEMA IF EXISTS {0};
+CREATE SCHEMA {0};
+""".format(schema_name)
+
+
+def get_sql_table_create_str(table_name):
+    return ""
+
+
+
 def get_config_file_json_contents():
     json_data = None
     try:
@@ -63,11 +75,65 @@ def generate_sql_script(json_data):
     f_contents = []
     f_contents.append("--Ponics Database Init Script (auto-generated)\n\n")
 
+    # find systems
     try:
-        #json_data = json_data["thiswillfail"]
-        json_data = json_data[KEY_SYSTEMS]
+        systems = json_data[KEY_SYSTEMS]
     except KeyError:
         print("No {} key found in config file".format(KEY_SYSTEMS))
+        return ""
+
+    for i, system in enumerate(systems):
+        # get system name
+        try:
+            sys_name = system[KEY_NAME]
+        except KeyError:
+            sys_name = "sys{}".format(i+1)
+        print("Found system: '{}'".format(sys_name))
+
+        # find tanks
+        try:
+            tanks = system[KEY_TANKS]
+        except KeyError:
+            print("No tanks found for system '{}'".format(sys_name))
+            continue
+
+        # iterate through tanks in system
+        for j, tank in enumerate(tanks):
+            # get tank name
+            try:
+                tank_name = "{}_{}".format(sys_name, tank[KEY_NAME])
+            except KeyError:
+                tank_name = "{}_tank{}".format(sys_name, j+1)
+            print("Found tank: '{}'".format(tank_name))
+
+            # find sensors
+            try:
+                sensors = tank[KEY_TANKS_SENSORS]
+            except KeyError:
+                print("No sensors found for tank '{}'".format(tank_name))
+                continue
+
+            # create schema for tank
+            f_contents.append(get_sql_schema_create_str(tank_name))
+
+            # iterate through sensors in tank
+            for k, sensor in enumerate(sensors):
+                # get sensor type
+                try:
+                    sensor_type = sensor[KEY_TYPE]
+                except KeyError:
+                    print("No sensor 'type' property found for {}, sensor {}".format(tank_name, k+1))
+                    continue
+                # get sensor name
+                try:
+                    sensor_name = sensor[KEY_NAME]
+                except KeyError:
+                    sensor_name = "sensor_{}".format(sensor_type)
+
+                # create table for sensor
+                f_contents.append(get_sql_table_create_str(sensor_name))
+
+
 
 
 

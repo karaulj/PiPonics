@@ -15,7 +15,6 @@ services:
     volumes:
       - ./${CONFIG_FILE}:/home/${CONFIG_FILE}
       - sql:/sql
-      - logs:/logs
     environment:
       CONFIG_FILE: ${CONFIG_FILE}
 

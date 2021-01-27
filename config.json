@@ -4,10 +4,11 @@
       "name": "sys1",
       "tanks": [
         {
-          "name": "fish-tank1",
+          "name": "tank1",
           "nice_name": "Primary Fish Tank",
           "sensors": [
             {
+              "name": "sensor_ph",
               "type": "pH"
             }
           ]
