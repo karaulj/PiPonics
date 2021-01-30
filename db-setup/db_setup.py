@@ -103,21 +103,22 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
 
     print("Beginning metadata sensor table creation")
 
-    f_contents = []
-    f_contents.append("\n--Ponics Metadata Table Script (auto-generated)\n")
-
     # find metadata
     try:
         metadata = json_data[KEY_METADATA]
     except KeyError:
         print("No '{}' property found in config file".format(KEY_METADATA))
         return ""
+
     # find sensors
     try:
         sensors = metadata[KEY_METADATA_SENSORS]
     except KeyError:
         print("No '{}' property found for '{}' object in config file".format(KEY_METADATA_SENSORS, KEY_METADATA))
+        return ""
 
+    f_contents = []
+    f_contents.append("\n--Ponics Metadata Table Script (auto-generated)\n")
     metadata_schema_created = False
 
     # iterate through sensors
@@ -173,10 +174,6 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
     write_to_file -- write tablenames to /common/$TABLENAMES_FILE if True.
     """
 
-    #print(json_data["metadata"]["sensors"]["pH"]["units"])
-    f_contents = []
-    f_contents.append("\n--Ponics Database Tables Script (auto-generated)\n")
-
     # find systems
     try:
         systems = json_data[KEY_SYSTEMS]
@@ -185,6 +182,8 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
         return ""   # return blank string for no sql script created
 
     tablenames = []
+    f_contents = []
+    f_contents.append("\n--Ponics Database Tables Script (auto-generated)\n")
 
     # iterate through systems
     for i, system in enumerate(systems):
@@ -198,7 +197,7 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
         try:
             tanks = system[KEY_TANKS]
         except KeyError:
-            print("No tanks found for system '{}'".format(sys_name))
+            print("No '{}' property found for system '{}'".format(KEY_TANKS, sys_name))
             continue
 
         # only create system schema if at least one sensor
@@ -216,7 +215,7 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
             try:
                 sensors = tank[KEY_TANKS_SENSORS]
             except KeyError:
-                print("No sensors found for tank '{}'".format(tank_name))
+                print("No '{}' property found for tank '{}'".format(KEY_TANKS_SENSORS, tank_name))
                 continue
 
             # iterate through sensors in tank
@@ -297,7 +296,11 @@ if __name__ == "__main__":
     print("Starting db init sql script generation")
     #init_logging()
     config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
+    if config_file is None:
+        print("Error: CONFIG_FILE environment variable not set. Please specify in .env file.")
+        sys.exit(1)
     sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
+
     main(config_file=config_file, sql_file=sql_file)
     print("db init finished successfully")
     sys.exit(0)
