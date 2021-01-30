@@ -3,6 +3,7 @@ import sys
 #import logging
 import time
 import json
+#from pypika import Query, Table, Column
 
 
 KEY_SYSTEMS = "systems"
@@ -42,27 +43,24 @@ def init_logging():
     consoleHandler.setFormatter(logFormatter)
     logger.addHandler(consoleHandler)
 
-
+""" START SQL QUERY HELPER FUNCTIONS """
 def get_sql_schema_create_str(schema_name:str) -> str:
     return """
 DROP SCHEMA IF EXISTS {0};
 CREATE SCHEMA {0};
 """.format(schema_name)
-
-
 def get_sql_table_create_str(schema_name:str, table_name:str, columns:list) -> str:
     return """
 CREATE TABLE {0}.{1} (
   {2}
 );
 """.format(schema_name, table_name, ",\n  ".join(columns))
-
-
 def get_sql_insert_str(schema_name:str, table_name:str, col_names:list, col_vals:list) -> str:
     return """
 INSERT INTO {0}.{1} ({2})
 VALUES ({3});
 """.format(schema_name, table_name, ", ".join(col_names), ", ".join(col_vals))
+""" END SQL QUERY HELPER FUNCTIONS """
 
 
 def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
@@ -269,7 +267,7 @@ def main(write_to_file=True) -> str:
     metadata_table_str = generate_metadata_sensor_table_str(json_contents)
     sql_script_str = db_init_tables_str + metadata_table_str
 
-    print("\n***BEGIN FULL SQL SCRIPT***\n{}\n***END FULL SQL SCRIPT***\n".format(sql_script_str))
+    print("\n*** BEGIN FULL SQL SCRIPT ***\n{}\n*** END FULL SQL SCRIPT ***\n".format(sql_script_str))
 
     if write_to_file:
         sql_script_file = '/sql/{}'.format(os.getenv('DB_INIT_FILE'))
@@ -282,8 +280,11 @@ def main(write_to_file=True) -> str:
 
 
 if __name__ == "__main__":
+    """
     import time
+    print("starting wait")
     time.sleep(10)
+    """
     print("Starting db init sql script generation")
     #init_logging()
     main(write_to_file=True)
