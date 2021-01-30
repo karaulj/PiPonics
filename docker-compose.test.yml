@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  db-init-test:
+    build:
+      context: ./db-setup
+      dockerfile: test/Dockerfile-test
+    depends_on:
+      - db-init
+    environment:
+      CONFIG_FILE: ${CONFIG_FILE}
+      DB_INIT_SQL_FILE: ${DB_INIT_SQL_FILE}
+      TABLENAMES_FILE: ${TABLENAMES_FILE}
+
+  #
+  # backend:
+  #   build: './backend-server-flask'
+  #   depends_on:
+  #     - "db"
+  #   ports:
+  #     - "5000:${API_PORT}"
+  #
+  # frontend:
+  #   build: './frontend-server-angular'
+  #   depends_on:
+  #     - "backend"
+  #   ports:
+  #     - "4200:${USER_PORT}"
