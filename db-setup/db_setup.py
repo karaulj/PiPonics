@@ -70,20 +70,19 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
             if sensor[KEY_METADATA_SENSORS_TYPE] == sensor_type:
                 return sensor[KEY_METADATA_SENSORS_SQL_DATATYPE]
         return None
-    except KeyError:
+    except:
         return None
 
 
-def get_config_file_json_contents() -> dict:
+def get_config_file_json_contents(json_file:str) -> dict:
     json_data = None
     try:
-        config_path = '/home/{}'.format(os.getenv('CONFIG_FILE'))
-        with open(config_path, 'r') as f:
+        with open(json_file, 'r') as f:
             json_data = json.load(f)
-        print("Got json data from {}".format(config_path))
+        print("Got json data from {}".format(json_file))
         print("Json data: {}\n".format(json.dumps(json_data)))
     except IOError:
-        print("Config file " + config_path + " not found. Ensure CONFIG_FILE variable is set in .env file.")
+        print("Config file " + json_file + " not found. Ensure CONFIG_FILE variable is set in .env file.")
         raise
     except json.decoder.JSONDecodeError:
         print("Could not decode json document. Refer to sample config.json")
@@ -166,11 +165,12 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
     return ''.join(f_contents)
 
 
-def generate_db_tables_str(json_data:dict):
-    """Return sql script for generating db tables AND list of table names as tuple.
+def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
+    """Return sql script for generating db tables.
 
     Keyword arguments:
-    json_data -- json object, root of config file (required)
+    json_data -- json object, root of config file (required).
+    write_to_file -- write tablenames to /common/$TABLENAMES_FILE if True.
     """
 
     #print(json_data["metadata"]["sensors"]["pH"]["units"])
@@ -250,35 +250,40 @@ def generate_db_tables_str(json_data:dict):
                 f_contents.append(get_sql_table_create_str(sys_name, sensor_name, columns))
                 tablenames.append("{}.{}".format(sys_name, sensor_name))
 
-    return ''.join(f_contents), tablenames
+    # print/write list of tablenames
+    print("List of generated tables: {}".format(tablenames))
+    if write_to_file:
+        with open('/common/{}'.format(os.getenv('TABLENAMES_FILE')), 'w') as f:
+            f.write(",".join(tablenames))
+
+    return ''.join(f_contents)
 
 
-def main(write_to_file=True) -> str:
+def main(config_file:str, sql_file:str=None) -> str:
     """ Generates an sql file for database initialization and returns the file path. Expects a config json file at /home/$CONFIG_FILE.
 
     Keyword arguments:
-    write_to_file -- Write to sql file or not. (default: True)
+    config_file -- path to config json file (required).
+    sql_file -- SQL filename to write to. Omits writing if None (default).
     """
     #print([f for f in os.listdir('/home')])
-    json_contents = get_config_file_json_contents()
+    json_contents = get_config_file_json_contents(config_file)
 
     if json_contents is None:
         print("Internal Error: Json data is null. Exiting")
         sys.exit(1)
 
-    db_init_tables_str, tablenames = generate_db_tables_str(json_contents)
+    db_init_tables_str = generate_db_tables_str(json_contents, write_to_file=True)
     metadata_sensor_table_str = generate_metadata_sensor_table_str(json_contents)
     sql_script_str = db_init_tables_str + metadata_sensor_table_str
 
-    print("List of generated tables: {}".format(tablenames))
     print("\n*** BEGIN FULL SQL SCRIPT ***\n{}\n*** END FULL SQL SCRIPT ***\n".format(sql_script_str))
 
-    if write_to_file:
-        sql_script_file = '/sql/{}'.format(os.getenv('DB_INIT_FILE'))
-        with open(sql_script_file, 'w') as f:
+    if sql_file is not None:
+        with open(sql_file, 'w') as f:
             f.write(sql_script_str)
-        print("Wrote db init sql script to {}".format(sql_script_file))
-        return sql_script_file
+        print("Wrote db init sql script to {}".format(sql_file))
+        return sql_file
     else:
         return ''
 
@@ -291,6 +296,8 @@ if __name__ == "__main__":
     """
     print("Starting db init sql script generation")
     #init_logging()
-    main(write_to_file=True)
+    config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
+    sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
+    main(config_file=config_file, sql_file=sql_file)
     print("db init finished successfully")
     sys.exit(0)
