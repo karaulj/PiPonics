@@ -33,7 +33,8 @@ services:
     ports:
       - "5432:${POSTGRES_PORT}"
     #command: /bin/sh -c "while [ ! -f /docker-entrypoint-initdb.d/${DB_INIT_FILE} ]; do echo 'waiting for db init script...'; sleep 1; done;"
-    command: /bin/sh -c "while [ ! -f /docker-entrypoint-initdb.d/${DB_INIT_FILE} ]; do echo 'waiting for db init script...'; sleep 1; done;" && postgres
+    #command: /bin/sh -c "while [ ! -f /docker-entrypoint-initdb.d/${DB_INIT_FILE} ]; do echo 'waiting for db init script...'; sleep 1; done;" && postgres
+    #command: sudo -u postgres postgres
     #command: "/bin/sh -c echo 'waiting for db init script...'; sleep 1; && postgres"
     #command: /bin/sh -c "echo 'hello world'"
   #

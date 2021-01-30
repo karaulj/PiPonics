@@ -166,8 +166,8 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
     return ''.join(f_contents)
 
 
-def generate_db_tables_str(json_data:dict) -> str:
-    """Return sql script for generating db tables.
+def generate_db_tables_str(json_data:dict):
+    """Return sql script for generating db tables AND list of table names as tuple.
 
     Keyword arguments:
     json_data -- json object, root of config file (required)
@@ -183,6 +183,8 @@ def generate_db_tables_str(json_data:dict) -> str:
     except KeyError:
         print("No '{}' property found in config file".format(KEY_SYSTEMS))
         return ""   # return blank string for no sql script created
+
+    tablenames = []
 
     # iterate through systems
     for i, system in enumerate(systems):
@@ -246,8 +248,9 @@ def generate_db_tables_str(json_data:dict) -> str:
                 columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                 columns.append("reading {} NOT NULL".format(sensor_datatype))
                 f_contents.append(get_sql_table_create_str(sys_name, sensor_name, columns))
+                tablenames.append("{}.{}".format(sys_name, sensor_name))
 
-    return ''.join(f_contents)
+    return ''.join(f_contents), tablenames
 
 
 def main(write_to_file=True) -> str:
@@ -263,10 +266,11 @@ def main(write_to_file=True) -> str:
         print("Internal Error: Json data is null. Exiting")
         sys.exit(1)
 
-    db_init_tables_str = generate_db_tables_str(json_contents)
-    metadata_table_str = generate_metadata_sensor_table_str(json_contents)
-    sql_script_str = db_init_tables_str + metadata_table_str
+    db_init_tables_str, tablenames = generate_db_tables_str(json_contents)
+    metadata_sensor_table_str = generate_metadata_sensor_table_str(json_contents)
+    sql_script_str = db_init_tables_str + metadata_sensor_table_str
 
+    print("List of generated tables: {}".format(tablenames))
     print("\n*** BEGIN FULL SQL SCRIPT ***\n{}\n*** END FULL SQL SCRIPT ***\n".format(sql_script_str))
 
     if write_to_file:
