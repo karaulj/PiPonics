@@ -1,15 +1,15 @@
 # Use python image
-FROM python:3.8.7
+FROM python:3.9.1-slim
 
 # set workdir
-WORKDIR /flask-app
+#WORKDIR /flask-app
 
 # flask env vars
-ENV FLASK_APP=app.py
+ENV FLASK_APP=main.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 # move app files
-COPY . /flask-app
+COPY . .
 
 # install python packages
 RUN pip install -r requirements.txt
