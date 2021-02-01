@@ -1,8 +1,9 @@
 import os
 import sys
-#import logging
 import time
 import json
+import uuid
+#import logging
 #from pypika import Query, Table, Column
 
 
@@ -12,17 +13,19 @@ KEY_SYSTEMS_NAME = "name"
 KEY_TANKS = "tanks"
 KEY_TANKS_NAME = "name"
 KEY_TANKS_NICE_NAME = "nice_name"
-KEY_TANKS_SENSORS = "sensors"
-KEY_TANKS_SENSORS_NAME = "name"
-KEY_TANKS_SENSORS_TYPE = "type"
+
+KEY_SENSORS = "sensors"
+KEY_SENSORS_NAME = "name"
+KEY_SENSORS_TYPE = "type"
 
 KEY_CROPS = "crops"
 KEY_CROPS_NAME = "name"
 KEY_CROPS_NICE_NAME = "nice_name"
-KEY_CROPS_ACTUATORS = "actuators"
-KEY_CROPS_ACTUATORS_NAME = "name"
-KEY_CROPS_ACTUATORS_TYPE = "type"
-KEY_CROPS_ACTUATORS_MAIN = "main"
+
+KEY_ACTUATORS = "actuators"
+KEY_ACTUATORS_NAME = "name"
+KEY_ACTUATORS_TYPE = "type"
+KEY_ACTUATORS_MAIN = "main"
 
 KEY_METADATA = "metadata"
 KEY_METADATA_SENSORS = "sensors"
@@ -72,6 +75,25 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
         return None
     except:
         return None
+
+
+"""
+def generate_uuid(uuid_lookup:dict, key:str):
+    all_uuids = uuid_lookup.values()
+    new_uuid = str(uuid.uuid4())
+    while new_uuid in all_uuids:
+        new_uuid = str(uuid.uuid4())
+    uuid_lookup[key] = new_uuid
+    return uuid_lookup
+"""
+
+
+def generate_uuid(all_uuids:list):
+    new_uuid = str(uuid.uuid4())
+    while new_uuid in all_uuids:
+        new_uuid = str(uuid.uuid4())
+    all_uuids.append(new_uuid)
+    return all_uuids, new_uuid
 
 
 def get_config_file_json_contents(json_file:str) -> dict:
@@ -171,7 +193,7 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
 
     Keyword arguments:
     json_data -- json object, root of config file (required).
-    write_to_file -- write tablenames to /common/$TABLENAMES_FILE if True.
+    write_to_file -- write uuids to /common/$UUIDS_FILE if True.
     """
 
     # find systems
@@ -181,7 +203,9 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
         print("No '{}' property found in config file".format(KEY_SYSTEMS))
         return ""   # return blank string for no sql script created
 
-    tablenames = []
+    #tablenames = []
+    entity_uuid_lookup = {KEY_SYSTEMS: {}, KEY_TANKS: {}, KEY_SENSORS: {}}
+    all_uuids = []
     f_contents = []
     f_contents.append("\n--Ponics Database Tables Script (auto-generated)\n")
 
@@ -189,10 +213,13 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
     for i, system in enumerate(systems):
         # get system name
         try:
-            sys_name = system[KEY_SYSTEMS_NAME]
+            sys_name = system[KEY_SYSTEMS_NAME].replace('/', '')
         except KeyError:
             sys_name = "sys{}".format(i+1)
         print("Found system: '{}'".format(sys_name))
+        # add uuid for system
+        all_uuids, sys_uuid = generate_uuid(all_uuids)
+        entity_uuid_lookup[KEY_SYSTEMS][sys_name] = sys_uuid
         # find tanks
         try:
             tanks = system[KEY_TANKS]
@@ -207,30 +234,36 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
         for j, tank in enumerate(tanks):
             # get tank name
             try:
-                tank_name = "{}".format(tank[KEY_TANKS_NAME])
+                tank_name = "{}".format(tank[KEY_TANKS_NAME].replace('/', ''))
             except KeyError:
                 tank_name = "tank{}".format(j+1)
             print("Found tank: '{}'".format(tank_name))
+            # add uuid for tank
+            all_uuids, tank_uuid = generate_uuid(all_uuids)
+            entity_uuid_lookup[KEY_TANKS]['{}/{}'.format(sys_name, tank_name)] = tank_uuid
             # find sensors
             try:
-                sensors = tank[KEY_TANKS_SENSORS]
+                sensors = tank[KEY_SENSORS]
             except KeyError:
-                print("No '{}' property found for tank '{}'".format(KEY_TANKS_SENSORS, tank_name))
+                print("No '{}' property found for tank '{}'".format(KEY_SENSORS, tank_name))
                 continue
 
             # iterate through sensors in tank
             for k, sensor in enumerate(sensors):
                 # get sensor type
                 try:
-                    sensor_type = sensor[KEY_TANKS_SENSORS_TYPE]
+                    sensor_type = sensor[KEY_SENSORS_TYPE].replace('/', '')
                 except KeyError:
-                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(KEY_TANKS_SENSORS_TYPE, sys_name, tank_name, k+1))
+                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
                     continue
                 # get sensor name
                 try:
-                    sensor_name = "{}_{}".format(tank_name, sensor[KEY_TANKS_SENSORS_NAME])
+                    sensor_name = "{}".format(sensor[KEY_SENSORS_NAME].replace('/', ''))
                 except KeyError:
-                    sensor_name = "{}_{}".format(tank_name, sensor_type)
+                    sensor_name = "{}".format(sensor_type)
+                # add uuid for sensor
+                all_uuids, sensor_uuid = generate_uuid(all_uuids)
+                entity_uuid_lookup[KEY_SENSORS]['{}/{}/{}'.format(sys_name, tank_name, sensor_name)] = sensor_uuid
 
                 if not sys_schema_created:
                     # create schema for system (since sensor table exists)
@@ -246,14 +279,14 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
                 columns.append("entry_id SERIAL PRIMARY KEY")
                 columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                 columns.append("reading {} NOT NULL".format(sensor_datatype))
-                f_contents.append(get_sql_table_create_str(sys_name, sensor_name, columns))
-                tablenames.append("{}.{}".format(sys_name, sensor_name))
+                f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(tank_name, sensor_name), columns))
+                #tablenames.append("{}.{}".format(sys_name, sensor_name))
 
-    # print/write list of tablenames
-    print("List of generated tables: {}".format(tablenames))
+    #print("List of generated tables: {}".format(tablenames))
     if write_to_file:
-        with open('/common/{}'.format(os.getenv('TABLENAMES_FILE')), 'w') as f:
-            f.write(",".join(tablenames))
+        with open('/common/{}'.format(os.getenv('UUIDS_FILE')), 'w') as f:
+            #f.write(",".join(tablenames))
+            f.write(json.dumps(entity_uuid_lookup, indent=2))
 
     return ''.join(f_contents)
 
@@ -288,19 +321,11 @@ def main(config_file:str, sql_file:str=None) -> str:
 
 
 if __name__ == "__main__":
-    """
-    import time
-    print("starting wait")
-    time.sleep(10)
-    """
     print("Starting db init sql script generation")
     #init_logging()
     config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
-    if config_file is None:
-        print("Error: CONFIG_FILE environment variable not set. Please specify in .env file.")
-        sys.exit(1)
     sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
 
-    main(config_file=config_file, sql_file=sql_file)
+    main(config_file, sql_file=sql_file)
     print("db init finished successfully")
     sys.exit(0)
