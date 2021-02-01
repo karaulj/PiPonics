@@ -192,7 +192,7 @@ def generate_db_tables_str(json_data:dict, uuids_file:str=None) -> str:
         print("No '{}' property found in config file".format(KEY_SYSTEMS))
         return ""   # return blank string for no sql script created
 
-    entity_uuid_lookup = {KEY_SYSTEMS: {}, KEY_TANKS: {}, KEY_SENSORS: {}}
+    entity_uuid_lookup = {KEY_SYSTEMS: {}, KEY_TANKS: {}, KEY_CROPS: {}, KEY_SENSORS: {}}
     all_uuids = []
     f_contents = []
     f_contents.append("\n--Ponics Database Tables Script (auto-generated)\n")
@@ -208,15 +208,16 @@ def generate_db_tables_str(json_data:dict, uuids_file:str=None) -> str:
         # add uuid for system
         all_uuids, sys_uuid = generate_uuid(all_uuids)
         entity_uuid_lookup[KEY_SYSTEMS][sys_name] = sys_uuid
+
+        # only create system schema if at least one sensor
+        sys_schema_created = False
+
         # find tanks
         try:
             tanks = system[KEY_TANKS]
         except KeyError:
             print("No '{}' property found for system '{}'".format(KEY_TANKS, sys_name))
             continue
-
-        # only create system schema if at least one sensor
-        sys_schema_created = False
 
         # iterate through tanks in system
         for j, tank in enumerate(tanks):
@@ -270,6 +271,66 @@ def generate_db_tables_str(json_data:dict, uuids_file:str=None) -> str:
                 columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                 columns.append("reading {} NOT NULL".format(sensor_datatype))
                 f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(tank_name, sensor_name), columns))
+
+        # find crops
+        try:
+            crops = system[KEY_CROPS]
+        except KeyError:
+            print("No '{}' property found for system '{}'".format(KEY_CROPS, sys_name))
+            continue
+
+        # iterate through crops in system
+        for j, crop in enumerate(crops):
+            # get crop name
+            try:
+                crop_name = "{}".format(crop[KEY_CROPS_NAME].replace('/', ''))
+            except KeyError:
+                crop_name = "crop{}".format(j+1)
+            print("Found crop: '{}'".format(crop_name))
+            # add uuid for crop
+            all_uuids, crop_uuid = generate_uuid(all_uuids)
+            entity_uuid_lookup[KEY_CROPS]['{}/{}'.format(sys_name, crop_name)] = crop_uuid
+            # find sensors
+            try:
+                sensors = crop[KEY_SENSORS]
+            except KeyError:
+                print("No '{}' property found for crop '{}'".format(KEY_SENSORS, crop_name))
+                continue
+
+            # iterate through sensors in crop
+            for k, sensor in enumerate(sensors):
+                # get sensor type
+                try:
+                    sensor_type = sensor[KEY_SENSORS_TYPE].replace('/', '')
+                except KeyError:
+                    print("No '{}' property found for system '{}', crop '{}', sensor #{}".format(KEY_SENSORS_TYPE, sys_name, crop_name, k+1))
+                    continue
+                # get sensor name
+                try:
+                    sensor_name = "{}".format(sensor[KEY_SENSORS_NAME].replace('/', ''))
+                except KeyError:
+                    sensor_name = "{}".format(sensor_type)
+                # add uuid for sensor
+                all_uuids, sensor_uuid = generate_uuid(all_uuids)
+                entity_uuid_lookup[KEY_SENSORS]['{}/{}/{}'.format(sys_name, crop_name, sensor_name)] = sensor_uuid
+
+                if not sys_schema_created:
+                    # create schema for system (at least one sensor exists)
+                    f_contents.append(get_sql_schema_create_str(sys_name))
+                    sys_schema_created = True
+
+                # create table for sensor
+                sensor_datatype = get_sensor_sql_data_type(json_data, sensor_type)
+                if sensor_datatype is None:
+                    continue
+
+                print("Found sensor: '{}'".format(sensor_name))
+
+                columns = []
+                columns.append("entry_id SERIAL PRIMARY KEY")
+                columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
+                columns.append("reading {} NOT NULL".format(sensor_datatype))
+                f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(crop_name, sensor_name), columns))
 
     if uuids_file is not None:
         with open(uuids_file, 'w') as f:

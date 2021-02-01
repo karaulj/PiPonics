@@ -6,6 +6,12 @@
         {
           "name": "tank1",
           "nice_name": "Primary Fish Tank",
+          "actuators": [
+            {
+              "type": "lights",
+              "nice_name": "Primary Fish Tank Lights"
+            }
+          ],
           "sensors": [
             {
               "type": "pH"
@@ -18,12 +24,17 @@
       ],
       "crops": [
         {
-          "name": "grow-bed1",
+          "name": "growbed1",
           "nice_name": "Primary Grow Bed",
           "actuators": [
             {
-              "type": "water-pump",
+              "type": "waterpump",
               "main": true
+            }
+          ],
+          "sensors": [
+            {
+              "type": "waterlevel"
             }
           ]
         }
@@ -45,6 +56,11 @@
       {
         "type": "DO",
         "units": "mg/L",
+        "sql_data_type": "FLOAT"
+      },
+      {
+        "type": "waterlevel",
+        "units": "inches",
         "sql_data_type": "FLOAT"
       }
     ]
