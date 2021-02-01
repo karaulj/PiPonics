@@ -1,9 +1,14 @@
-from flask import Flask
-app = Flask(__name__)
+from flask import (
+    Blueprint, request
+)
 
-@app.route('/')
+api = Blueprint('api', __name__, url_prefix='/api')
+
+
+@api.route('/echo', methods=('GET'))
 def hello_world():
     return 'Hello, World!'
+
 
 @app.route('/test')
 def test_endpoint():
