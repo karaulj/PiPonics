@@ -10,7 +10,7 @@ services:
     environment:
       CONFIG_FILE: ${CONFIG_FILE}
       DB_INIT_SQL_FILE: ${DB_INIT_SQL_FILE}
-      TABLENAMES_FILE: ${TABLENAMES_FILE}
+      UUIDS_FILE: ${UUIDS_FILE}
 
   #
   # backend:
