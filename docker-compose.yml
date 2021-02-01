@@ -54,4 +54,4 @@ services:
   #   depends_on:
   #     - backend
   #   ports:
-  #     - "4200:${USER_PORT}"
+  #     - "4200:${WEB_UI_PORT}"

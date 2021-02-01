@@ -77,17 +77,6 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
         return None
 
 
-"""
-def generate_uuid(uuid_lookup:dict, key:str):
-    all_uuids = uuid_lookup.values()
-    new_uuid = str(uuid.uuid4())
-    while new_uuid in all_uuids:
-        new_uuid = str(uuid.uuid4())
-    uuid_lookup[key] = new_uuid
-    return uuid_lookup
-"""
-
-
 def generate_uuid(all_uuids:list):
     new_uuid = str(uuid.uuid4())
     while new_uuid in all_uuids:
@@ -102,7 +91,7 @@ def get_config_file_json_contents(json_file:str) -> dict:
         with open(json_file, 'r') as f:
             json_data = json.load(f)
         print("Got json data from {}".format(json_file))
-        print("Json data: {}\n".format(json.dumps(json_data)))
+        print("Json data: {}\n".format(json.dumps(json_data, indent=2)))
     except IOError:
         print("Config file " + json_file + " not found. Ensure CONFIG_FILE variable is set in .env file.")
         raise
@@ -188,7 +177,7 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
     return ''.join(f_contents)
 
 
-def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
+def generate_db_tables_str(json_data:dict, uuids_file:str=None) -> str:
     """Return sql script for generating db tables.
 
     Keyword arguments:
@@ -203,7 +192,6 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
         print("No '{}' property found in config file".format(KEY_SYSTEMS))
         return ""   # return blank string for no sql script created
 
-    #tablenames = []
     entity_uuid_lookup = {KEY_SYSTEMS: {}, KEY_TANKS: {}, KEY_SENSORS: {}}
     all_uuids = []
     f_contents = []
@@ -266,7 +254,7 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
                 entity_uuid_lookup[KEY_SENSORS]['{}/{}/{}'.format(sys_name, tank_name, sensor_name)] = sensor_uuid
 
                 if not sys_schema_created:
-                    # create schema for system (since sensor table exists)
+                    # create schema for system (at least one sensor exists)
                     f_contents.append(get_sql_schema_create_str(sys_name))
                     sys_schema_created = True
 
@@ -275,18 +263,18 @@ def generate_db_tables_str(json_data:dict, write_to_file:bool=True) -> str:
                 if sensor_datatype is None:
                     continue
 
+                print("Found sensor: '{}'".format(sensor_name))
+
                 columns = []
                 columns.append("entry_id SERIAL PRIMARY KEY")
                 columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                 columns.append("reading {} NOT NULL".format(sensor_datatype))
                 f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(tank_name, sensor_name), columns))
-                #tablenames.append("{}.{}".format(sys_name, sensor_name))
 
-    #print("List of generated tables: {}".format(tablenames))
-    if write_to_file:
-        with open('/common/{}'.format(os.getenv('UUIDS_FILE')), 'w') as f:
-            #f.write(",".join(tablenames))
+    if uuids_file is not None:
+        with open(uuids_file, 'w') as f:
             f.write(json.dumps(entity_uuid_lookup, indent=2))
+            print("Wrote UUIDs lookup to '{}'".format(uuids_file))
 
     return ''.join(f_contents)
 
@@ -298,14 +286,17 @@ def main(config_file:str, sql_file:str=None) -> str:
     config_file -- path to config json file (required).
     sql_file -- SQL filename to write to. Omits writing if None (default).
     """
-    #print([f for f in os.listdir('/home')])
     json_contents = get_config_file_json_contents(config_file)
-
     if json_contents is None:
-        print("Internal Error: Json data is null. Exiting")
+        print("Internal Error: Config file json data is null. Exiting")
         sys.exit(1)
 
-    db_init_tables_str = generate_db_tables_str(json_contents, write_to_file=True)
+    if os.getenv('UUIDS_FILE') != '':
+        uuids_file = '/common/{}'.format(os.getenv('UUIDS_FILE'))
+    else:
+        print("UUIDS_FILE environment variable not set.")
+        uuids_file = None
+    db_init_tables_str = generate_db_tables_str(json_contents, uuids_file=uuids_file)
     metadata_sensor_table_str = generate_metadata_sensor_table_str(json_contents)
     sql_script_str = db_init_tables_str + metadata_sensor_table_str
 
@@ -314,7 +305,7 @@ def main(config_file:str, sql_file:str=None) -> str:
     if sql_file is not None:
         with open(sql_file, 'w') as f:
             f.write(sql_script_str)
-        print("Wrote db init sql script to {}".format(sql_file))
+        print("Wrote db init sql script to '{}'".format(sql_file))
         return sql_file
     else:
         return ''
@@ -322,10 +313,18 @@ def main(config_file:str, sql_file:str=None) -> str:
 
 if __name__ == "__main__":
     print("Starting db init sql script generation")
-    #init_logging()
-    config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
-    sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
-
+    # get config file
+    if os.getenv('CONFIG_FILE') != '':
+        config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
+    else:
+        print("Error: CONFIG_FILE environment variable is not set.")
+        sys.exit(1)
+    # get sql file
+    if os.getenv('DB_INIT_SQL_FILE') != '':
+        sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
+    else:
+        sql_file = None
+    # run main program
     main(config_file, sql_file=sql_file)
     print("db init finished successfully")
     sys.exit(0)

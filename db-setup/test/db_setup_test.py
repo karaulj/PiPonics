@@ -1,4 +1,5 @@
 import unittest
+import sys, os
 import db_setup
 import json
 
@@ -11,6 +12,13 @@ def get_json_data(filename):
 
 
 class Test_get_config_file_json_contents(unittest.TestCase):
+
+    def setUp(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+    def tearDown(self):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
 
     def test_no_file(self):
         with self.assertRaises(IOError):
@@ -58,6 +66,13 @@ class Test_get_config_file_json_contents(unittest.TestCase):
 
 class Test_generate_metadata_sensor_table_str(unittest.TestCase):
 
+    def setUp(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+    def tearDown(self):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
     def test_empty_file(self):
         json_file = '/data/empty.json'
         data = get_json_data(json_file)
@@ -103,6 +118,13 @@ VALUES ('DO', 'mg/L', 'FLOAT');"""
 
 class Test_generate_db_tables_str(unittest.TestCase):
 
+    def setUp(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+    def tearDown(self):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
     def test_empty_file(self):
         json_file = '/data/empty.json'
         data = get_json_data(json_file)
@@ -127,5 +149,4 @@ CREATE TABLE sys1.tank1_pH (
         self.assertIn(create_table_str, actual)
 
 if __name__ == "__main__":
-    print("Starting db initialization tests")
     unittest.main(verbosity=2)
