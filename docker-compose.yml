@@ -21,7 +21,7 @@ services:
     environment:
       CONFIG_FILE: ${CONFIG_FILE}
       DB_INIT_SQL_FILE: ${DB_INIT_SQL_FILE}
-      TABLENAMES_FILE: ${TABLENAMES_FILE}
+      UUIDS_FILE: ${UUIDS_FILE}
 
   db:
     image: postgres:13.1
@@ -41,7 +41,7 @@ services:
     #command: sudo -u postgres postgres
     #command: "/bin/sh -c echo 'waiting for db init script...'; sleep 1; && postgres"
     #command: /bin/sh -c "echo 'hello world'"
-  #
+
   # backend:
   #   build: './backend-server-flask'
   #   depends_on:
