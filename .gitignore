@@ -1,1 +1,2 @@
 # .gitignores delegated to subdirectories 
+common/*
