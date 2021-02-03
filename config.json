@@ -2,6 +2,7 @@
   "systems": [
     {
       "name": "sys1",
+      "nice_name": "Primary Aquaponics System",
       "tanks": [
         {
           "name": "tank1",

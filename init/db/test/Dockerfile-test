@@ -4,9 +4,6 @@ FROM python:3.9.1-slim
 # create dir for sharing sql file
 RUN mkdir /sql
 
-# create dir for sharing table info
-RUN mkdir /common
-
 # create dir for holding test config json files
 RUN mkdir /data
 

@@ -3,14 +3,13 @@ version: "3"
 services:
   db-init-test:
     build:
-      context: ./db-setup
+      context: ./init/db
       dockerfile: test/Dockerfile-test
     depends_on:
       - db-init
     environment:
       CONFIG_FILE: ${CONFIG_FILE}
       DB_INIT_SQL_FILE: ${DB_INIT_SQL_FILE}
-      UUIDS_FILE: ${UUIDS_FILE}
 
   #
   # backend:
