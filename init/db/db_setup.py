@@ -255,7 +255,7 @@ def main(config_file:str, sql_file:str=None) -> int:
     config_file -- path to config json file (required).
     sql_file -- SQL filename to write to. Omits writing if None (default).
     """
-    json_contents = ch.get_config_file_json_contents(config_file)
+    json_contents = ch.get_json_file_contents(config_file)
     if json_contents is None:
         print("Internal Error: Config file json data is null. Exiting")
         sys.exit(1)

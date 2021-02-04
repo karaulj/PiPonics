@@ -46,7 +46,7 @@
     "sensors": [
       {
         "type": "pH",
-        "units": null,
+        "units": "pH level",
         "sql_data_type": "SMALLINT"
       },
       {

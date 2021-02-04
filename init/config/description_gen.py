@@ -5,9 +5,6 @@ import uuid
 import config_helper as ch
 
 
-KEY_UUID = "uuid"
-
-
 def get_sensor_units(json_data:dict, sensor_type:str) -> str:
     try:
         sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
@@ -54,7 +51,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
         print("Found system: '{}'".format(sys_name))
         # add uuid for system
         all_uuids, sys_uuid = generate_uuid(all_uuids)
-        entity_lookup[ch.KEY_SYSTEMS][i][KEY_UUID] = sys_uuid
+        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_UUID] = sys_uuid
 
         # find tanks
         try:
@@ -73,7 +70,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             print("Found tank: '{}'".format(tank_name))
             # add uuid for tank
             all_uuids, tank_uuid = generate_uuid(all_uuids)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][KEY_UUID] = tank_uuid
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_UUID] = tank_uuid
             # add system name
             entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SYSTEM] = sys_name
 
@@ -88,7 +85,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 print("Found actuator #{}".format(k+1))
                 # add uuid for actuator
                 all_uuids, actuator_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][KEY_UUID] = actuator_uuid
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
                 # add system name
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
                 # add tank name
@@ -111,7 +108,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][KEY_UUID] = sensor_uuid
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_UUID] = sensor_uuid
                 # add sensor units
                 try:
                     entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
@@ -140,7 +137,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             print("Found crop: '{}'".format(crop_name))
             # add uuid for crop
             all_uuids, crop_uuid = generate_uuid(all_uuids)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][KEY_UUID] = crop_uuid
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_UUID] = crop_uuid
             # add system name
             entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SYSTEM] = sys_name
 
@@ -155,7 +152,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 print("Found actuator #{}".format(k+1))
                 # add uuid for actuator
                 all_uuids, actuator_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][KEY_UUID] = actuator_uuid
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
                 # add system name
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
                 # add crop name
@@ -178,7 +175,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][KEY_UUID] = sensor_uuid
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_UUID] = sensor_uuid
                 # add sensor units
                 try:
                     entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
@@ -199,7 +196,7 @@ def main(config_file:str, entity_file:str=None) -> int:
     config_file -- path to config json file (required).
     entity_file -- filename of output description json. Omits writing if None (default).
     """
-    json_contents = ch.get_config_file_json_contents(config_file)
+    json_contents = ch.get_json_file_contents(config_file)
     if json_contents is None:
         print("Internal Error: Config file json data is null. Exiting")
         sys.exit(1)
