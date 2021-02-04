@@ -15,6 +15,7 @@ KEY_SENSOR = "sensor"
 KEY_SENSORS = "sensors"
 KEY_SENSORS_NAME = "name"
 KEY_SENSORS_TYPE = "type"
+KEY_SENSORS_UNITS = "units"
 
 KEY_CROP = "crop"
 KEY_CROPS = "crops"

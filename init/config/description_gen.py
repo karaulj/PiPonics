@@ -8,6 +8,17 @@ import config_helper as ch
 KEY_UUID = "uuid"
 
 
+def get_sensor_units(json_data:dict, sensor_type:str) -> str:
+    try:
+        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
+        for sensor in sensor_list:
+            if sensor[ch.KEY_METADATA_SENSORS_TYPE] == sensor_type:
+                return sensor[ch.KEY_METADATA_SENSORS_UNITS]
+        return None
+    except:
+        return None
+
+
 def generate_uuid(all_uuids:list):
     new_uuid = str(uuid.uuid4())
     while new_uuid in all_uuids:
@@ -16,26 +27,7 @@ def generate_uuid(all_uuids:list):
     return all_uuids, new_uuid
 
 
-def get_config_file_json_contents(json_file:str) -> dict:
-    json_data = None
-    try:
-        with open(json_file, 'r') as f:
-            json_data = json.load(f)
-        print("Got json data from {}".format(json_file))
-    except IOError:
-        print("Config file " + json_file + " not found. Ensure CONFIG_FILE variable is set in .env file.")
-        raise
-    except json.decoder.JSONDecodeError:
-        print("Could not decode json document. Refer to sample config.json")
-        raise
-    except:
-        print("Unknown Error occured during json document decoding.")
-        raise
-
-    return json_data
-
-
-def generate_entity_uuids(json_data:dict, entity_lookup:dict=None) -> dict:
+def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
     """Return entity lookup table w/ generated UUIDs.
 
     Keyword arguments:
@@ -109,11 +101,22 @@ def generate_entity_uuids(json_data:dict, entity_lookup:dict=None) -> dict:
                 print("No '{}' property found for tank '{}'".format(ch.KEY_SENSORS, j+1))
                 continue
             # iterate through sensors in tank
-            for k in range(len(sensors)):
+            for k, sensor in enumerate(sensors):
                 print("Found sensor #{}".format(k+1))
+                # get sensor type
+                try:
+                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                except KeyError:
+                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
+                    continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][KEY_UUID] = sensor_uuid
+                # add sensor units
+                try:
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
+                except KeyError:
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
                 # add system name
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                 # add tank name
@@ -165,11 +168,22 @@ def generate_entity_uuids(json_data:dict, entity_lookup:dict=None) -> dict:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_SENSORS, j+1))
                 continue
             # iterate through sensors in crop
-            for k in range(len(sensors)):
+            for k, sensor in enumerate(sensors):
                 print("Found sensor #{}".format(k+1))
+                # get sensor type
+                try:
+                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                except KeyError:
+                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
+                    continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][KEY_UUID] = sensor_uuid
+                # add sensor units
+                try:
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
+                except KeyError:
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
                 # add system name
                 entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                 # add crop name
@@ -190,7 +204,7 @@ def main(config_file:str, entity_file:str=None) -> int:
         print("Internal Error: Config file json data is null. Exiting")
         sys.exit(1)
 
-    entity_lookup = generate_entity_uuids(json_contents, entity_lookup=json_contents)
+    entity_lookup = generate_entity_contents(json_contents, entity_lookup=json_contents)
 
     if entity_file is not None:
         with open(entity_file, 'w') as f:
