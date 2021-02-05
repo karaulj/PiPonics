@@ -48,6 +48,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             sys_name = system[ch.KEY_SYSTEMS_NAME].replace('/', '')
         except KeyError:
             sys_name = ch.get_default_system_name(i+1)
+        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_SYSTEMS_NAME] = sys_name
         print("Found system: '{}'".format(sys_name))
         # add uuid for system
         all_uuids, sys_uuid = generate_uuid(all_uuids)
@@ -58,7 +59,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             tanks = system[ch.KEY_TANKS]
         except KeyError:
             print("No '{}' property found for system '{}'".format(ch.KEY_TANKS, i+1))
-            continue
+            tanks = []
+        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS] = tanks
 
         # iterate through tanks in system
         for j, tank in enumerate(tanks):
@@ -67,6 +69,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 tank_name = "{}".format(tank[ch.KEY_TANKS_NAME].replace('/', ''))
             except KeyError:
                 tank_name = ch.get_default_tank_name(j+1)
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_TANKS_NAME] = tank_name
             print("Found tank: '{}'".format(tank_name))
             # add uuid for tank
             all_uuids, tank_uuid = generate_uuid(all_uuids)
@@ -79,8 +82,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 actuators = tank[ch.KEY_ACTUATORS]
             except KeyError:
                 print("No '{}' property found for tank '{}'".format(ch.KEY_ACTUATORS, j+1))
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = []
                 actuators = []
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = actuators
             # iterate through actuators
             for k in range(len(actuators)):
                 print("Found actuator #{}".format(k+1))
@@ -97,7 +100,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 sensors = tank[ch.KEY_SENSORS]
             except KeyError:
                 print("No '{}' property found for tank '{}'".format(ch.KEY_SENSORS, j+1))
-                continue
+                sensors = []
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = sensors
             # iterate through sensors in tank
             for k, sensor in enumerate(sensors):
                 print("Found sensor #{}".format(k+1))
@@ -106,7 +110,6 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
                 except KeyError:
                     print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = []
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
@@ -127,7 +130,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             crops = system[ch.KEY_CROPS]
         except KeyError:
             print("No '{}' property found for system '{}'".format(ch.KEY_CROPS, i+1))
-            continue
+            crops = []
+        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS] = crops
 
         # iterate through crops in system
         for j, crop in enumerate(crops):
@@ -136,6 +140,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 crop_name = "{}".format(crop[ch.KEY_CROPS_NAME].replace('/', ''))
             except KeyError:
                 crop_name = ch.get_default_crop_name(j+1)
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_CROPS_NAME] = crop_name
             print("Found crop: '{}'".format(crop_name))
             # add uuid for crop
             all_uuids, crop_uuid = generate_uuid(all_uuids)
@@ -148,8 +153,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 actuators = crop[ch.KEY_ACTUATORS]
             except KeyError:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_ACTUATORS, j+1))
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = []
                 actuators = []
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = actuators
             # iterate through actuators
             for k in range(len(actuators)):
                 print("Found actuator #{}".format(k+1))
@@ -166,7 +171,8 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 sensors = crop[ch.KEY_SENSORS]
             except KeyError:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_SENSORS, j+1))
-                continue
+                sensors = []
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = sensors
             # iterate through sensors in crop
             for k, sensor in enumerate(sensors):
                 print("Found sensor #{}".format(k+1))
@@ -175,7 +181,6 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
                 except KeyError:
                     print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = []
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
