@@ -154,7 +154,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             except KeyError:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_ACTUATORS, j+1))
                 actuators = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = actuators
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS] = actuators
             # iterate through actuators
             for k in range(len(actuators)):
                 print("Found actuator #{}".format(k+1))
@@ -172,7 +172,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
             except KeyError:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_SENSORS, j+1))
                 sensors = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = sensors
+            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS] = sensors
             # iterate through sensors in crop
             for k, sensor in enumerate(sensors):
                 print("Found sensor #{}".format(k+1))
