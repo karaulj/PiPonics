@@ -79,6 +79,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 actuators = tank[ch.KEY_ACTUATORS]
             except KeyError:
                 print("No '{}' property found for tank '{}'".format(ch.KEY_ACTUATORS, j+1))
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = []
                 actuators = []
             # iterate through actuators
             for k in range(len(actuators)):
@@ -105,6 +106,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
                 except KeyError:
                     print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = []
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
@@ -146,6 +148,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                 actuators = crop[ch.KEY_ACTUATORS]
             except KeyError:
                 print("No '{}' property found for crop '{}'".format(ch.KEY_ACTUATORS, j+1))
+                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = []
                 actuators = []
             # iterate through actuators
             for k in range(len(actuators)):
@@ -172,6 +175,7 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
                     sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
                 except KeyError:
                     print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
+                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = []
                     continue
                 # add uuid for sensor
                 all_uuids, sensor_uuid = generate_uuid(all_uuids)
