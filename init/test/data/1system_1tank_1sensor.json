@@ -1,0 +1,27 @@
+{
+  "systems": [
+    {
+      "name": "sys1",
+      "tanks": [
+        {
+          "name": "tank1",
+          "nice_name": "Primary Fish Tank",
+          "sensors": [
+            {
+              "type": "pH"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "sensors": [
+      {
+        "type": "pH",
+        "units": null,
+        "sql_data_type": "SMALLINT"
+      }
+    ]
+  }
+}

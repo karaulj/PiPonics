@@ -1,15 +1,20 @@
 version: "3"
 
 services:
+  init-test:
+    build:
+      context: ./init
+      dockerfile: test/Dockerfile-test
+
   db-init-test:
     build:
       context: ./init/db
       dockerfile: test/Dockerfile-test
+    volumes:
+      - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
     depends_on:
       - db-init
-    environment:
-      CONFIG_FILE: ${CONFIG_FILE}
-      DB_INIT_SQL_FILE: ${DB_INIT_SQL_FILE}
+
 
   #
   # backend:

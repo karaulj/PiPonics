@@ -46,10 +46,10 @@ def get_json_file_contents(json_file:str, print_func=print) -> dict:
         return entity_data
     except IsADirectoryError:
         print_func("Error: '{}' is a directory. Ensure env var is set, if any.".format(description_file))
-        sys.exit(1)
+        raise
     except IOError:
         print_func("Error: File '{}' not found.".format(json_file))
-        sys.exit(1)
+        raise
     except json.decoder.JSONDecodeError:
         print_func("Error: Could not decode json document at '{}'.".format(json_file))
         raise
