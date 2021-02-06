@@ -12,6 +12,7 @@ services:
       dockerfile: test/Dockerfile-test
     volumes:
       - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
+      - ./init/test/data:/data
     depends_on:
       - db-init
 
