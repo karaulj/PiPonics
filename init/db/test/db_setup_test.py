@@ -1,14 +1,7 @@
 import unittest
 import sys, os
-import db_setup
+import db_setup, config_helper as ch
 import json
-
-
-def get_json_data(filename):
-    data = None
-    with open(filename) as f:
-        data = json.load(f)
-    return data
 
 
 class Test_generate_metadata_sensor_table_str(unittest.TestCase):
@@ -22,21 +15,21 @@ class Test_generate_metadata_sensor_table_str(unittest.TestCase):
 
     def test_empty_file(self):
         json_file = '/data/empty.json'
-        data = get_json_data(json_file)
+        data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_metadata_sensor_table_str(json_data=data)
         expected = ''
         self.assertEqual(actual, expected)
 
     def test_no_sensors(self):
         json_file = '/data/metadata_no_sensors.json'
-        data = get_json_data(json_file)
+        data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_metadata_sensor_table_str(json_data=data)
         expected = ''
         self.assertEqual(actual, expected)
 
     def test_multiple_sensors(self):
         json_file = '/data/metadata_mult_sensors.json'
-        data = get_json_data(json_file)
+        data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_metadata_sensor_table_str(json_data=data)
 
         metadata_schema_str = "CREATE SCHEMA metadata;"
@@ -74,14 +67,14 @@ class Test_generate_db_tables_str(unittest.TestCase):
 
     def test_empty_file(self):
         json_file = '/data/empty.json'
-        data = get_json_data(json_file)
+        data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_db_tables_str(json_data=data)
         expected = ''
         self.assertEqual(actual, expected)
 
     def test_1system_1tank_1sensor(self):
         json_file = '/data/1system_1tank_1sensor.json'
-        data = get_json_data(json_file)
+        data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_db_tables_str(json_data=data)
 
         create_schema_str = "CREATE SCHEMA sys1;"
@@ -98,4 +91,3 @@ CREATE TABLE sys1.tank1_pH (
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
-

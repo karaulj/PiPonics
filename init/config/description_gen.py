@@ -24,20 +24,21 @@ def generate_uuid(all_uuids:list):
     return all_uuids, new_uuid
 
 
-def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
+def generate_entity_contents(json_data:dict) -> dict:
     """Return entity lookup table w/ generated UUIDs.
 
     Keyword arguments:
     json_data -- json object, root of config file (required).
-    entity_lookup -- dictionary to write setup description to (typically copy of json_data).
     """
+
+    entity_lookup = json_data
 
     # find systems
     try:
         systems = json_data[ch.KEY_SYSTEMS]
     except KeyError:
         print("No '{}' property found in config file".format(ch.KEY_SYSTEMS))
-        return entity_lookup   # return data if no systems found
+        systems = []
 
     all_uuids = []
 
@@ -45,155 +46,95 @@ def generate_entity_contents(json_data:dict, entity_lookup:dict=None) -> dict:
     for i, system in enumerate(systems):
         # get system name
         try:
-            sys_name = system[ch.KEY_SYSTEMS_NAME].replace('/', '')
+            sys_name = system[ch.KEY_NAME].replace('/', '')
         except KeyError:
             sys_name = ch.get_default_system_name(i+1)
-        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_SYSTEMS_NAME] = sys_name
+        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_NAME] = sys_name
         print("Found system: '{}'".format(sys_name))
         # add uuid for system
         all_uuids, sys_uuid = generate_uuid(all_uuids)
         entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_UUID] = sys_uuid
 
-        # find tanks
-        try:
-            tanks = system[ch.KEY_TANKS]
-        except KeyError:
-            print("No '{}' property found for system '{}'".format(ch.KEY_TANKS, i+1))
-            tanks = []
-        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS] = tanks
+        container_types = [ch.KEY_TANKS, ch.KEY_CROPS]
+        for container_type in container_types:
+            # get singular word for container
+            if container_type == ch.KEY_TANKS:
+                container_type_singular = ch.KEY_TANK
+            elif container_type == ch.KEY_CROPS:
+                container_type_singular = ch.KEY_CROP
+            else:
+                raise Exception("Unknown container type: '{}'".format(container_type))
 
-        # iterate through tanks in system
-        for j, tank in enumerate(tanks):
-            # get tank name
+            # find containers (tanks or crops)
             try:
-                tank_name = "{}".format(tank[ch.KEY_TANKS_NAME].replace('/', ''))
+                containers = system[container_type]
             except KeyError:
-                tank_name = ch.get_default_tank_name(j+1)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_TANKS_NAME] = tank_name
-            print("Found tank: '{}'".format(tank_name))
-            # add uuid for tank
-            all_uuids, tank_uuid = generate_uuid(all_uuids)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_UUID] = tank_uuid
-            # add system name
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SYSTEM] = sys_name
+                print("No '{}' property found for system '{}'".format(container_type, i+1))
+                containers = []
+            entity_lookup[ch.KEY_SYSTEMS][i][container_type] = containers
 
-            # find actuators
-            try:
-                actuators = tank[ch.KEY_ACTUATORS]
-            except KeyError:
-                print("No '{}' property found for tank '{}'".format(ch.KEY_ACTUATORS, j+1))
-                actuators = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS] = actuators
-            # iterate through actuators
-            for k in range(len(actuators)):
-                print("Found actuator #{}".format(k+1))
-                # add uuid for actuator
-                all_uuids, actuator_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
-                # add system name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
-                # add tank name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_ACTUATORS][k][ch.KEY_TANK] = tank_name
-
-            # find sensors
-            try:
-                sensors = tank[ch.KEY_SENSORS]
-            except KeyError:
-                print("No '{}' property found for tank '{}'".format(ch.KEY_SENSORS, j+1))
-                sensors = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS] = sensors
-            # iterate through sensors in tank
-            for k, sensor in enumerate(sensors):
-                print("Found sensor #{}".format(k+1))
-                # get sensor type
+            # iterate through containers of type tank or crop in system
+            for j, container in enumerate(containers):
+                # get container name
                 try:
-                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                    container_name = "{}".format(container[ch.KEY_NAME].replace('/', ''))
                 except KeyError:
-                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
-                    continue
-                # add uuid for sensor
-                all_uuids, sensor_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_UUID] = sensor_uuid
-                # add sensor units
-                try:
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
-                except KeyError:
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
+                    container_name = ch.get_default_container_name(container_type, j+1)
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_NAME] = container_name
+                print("Found container: '{}'".format(container_name))
+                # add uuid for container
+                all_uuids, container_uuid = generate_uuid(all_uuids)
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_UUID] = container_uuid
                 # add system name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
-                # add tank name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_TANKS][j][ch.KEY_SENSORS][k][ch.KEY_TANK] = tank_name
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SYSTEM] = sys_name
 
-
-        # find crops
-        try:
-            crops = system[ch.KEY_CROPS]
-        except KeyError:
-            print("No '{}' property found for system '{}'".format(ch.KEY_CROPS, i+1))
-            crops = []
-        entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS] = crops
-
-        # iterate through crops in system
-        for j, crop in enumerate(crops):
-            # get crop name
-            try:
-                crop_name = "{}".format(crop[ch.KEY_CROPS_NAME].replace('/', ''))
-            except KeyError:
-                crop_name = ch.get_default_crop_name(j+1)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_CROPS_NAME] = crop_name
-            print("Found crop: '{}'".format(crop_name))
-            # add uuid for crop
-            all_uuids, crop_uuid = generate_uuid(all_uuids)
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_UUID] = crop_uuid
-            # add system name
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SYSTEM] = sys_name
-
-            # find actuators
-            try:
-                actuators = crop[ch.KEY_ACTUATORS]
-            except KeyError:
-                print("No '{}' property found for crop '{}'".format(ch.KEY_ACTUATORS, j+1))
-                actuators = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS] = actuators
-            # iterate through actuators
-            for k in range(len(actuators)):
-                print("Found actuator #{}".format(k+1))
-                # add uuid for actuator
-                all_uuids, actuator_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
-                # add system name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
-                # add crop name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_ACTUATORS][k][ch.KEY_CROP] = crop_name
-
-            # find sensors
-            try:
-                sensors = crop[ch.KEY_SENSORS]
-            except KeyError:
-                print("No '{}' property found for crop '{}'".format(ch.KEY_SENSORS, j+1))
-                sensors = []
-            entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS] = sensors
-            # iterate through sensors in crop
-            for k, sensor in enumerate(sensors):
-                print("Found sensor #{}".format(k+1))
-                # get sensor type
+                # find actuators
                 try:
-                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                    actuators = container[ch.KEY_ACTUATORS]
                 except KeyError:
-                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
-                    continue
-                # add uuid for sensor
-                all_uuids, sensor_uuid = generate_uuid(all_uuids)
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_UUID] = sensor_uuid
-                # add sensor units
+                    print("No '{}' property found for container '{}'".format(ch.KEY_ACTUATORS, j+1))
+                    actuators = []
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS] = actuators
+                # iterate through actuators
+                for k in range(len(actuators)):
+                    print("Found actuator #{}".format(k+1))
+                    # add uuid for actuator
+                    all_uuids, actuator_uuid = generate_uuid(all_uuids)
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
+                    # add system name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
+                    # add container name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][container_type_singular] = container_name
+
+
+                # find sensors
                 try:
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
+                    sensors = container[ch.KEY_SENSORS]
                 except KeyError:
-                    entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
-                # add system name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
-                # add crop name
-                entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_CROPS][j][ch.KEY_SENSORS][k][ch.KEY_CROP] = crop_name
+                    print("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, j+1))
+                    sensors = []
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS] = sensors
+                # iterate through sensors in container
+                for k, sensor in enumerate(sensors):
+                    print("Found sensor #{}".format(k+1))
+                    # get sensor type
+                    try:
+                        sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                    except KeyError:
+                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, container_name, k+1))
+                        continue
+                    # add uuid for sensor
+                    all_uuids, sensor_uuid = generate_uuid(all_uuids)
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_UUID] = sensor_uuid
+                    # add sensor units
+                    try:
+                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
+                    except KeyError:
+                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
+                    # add system name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
+                    # add container name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][container_type_singular] = container_name
 
     return entity_lookup
 
@@ -210,7 +151,7 @@ def main(config_file:str, entity_file:str=None) -> int:
         print("Internal Error: Config file json data is null. Exiting")
         sys.exit(1)
 
-    entity_lookup = generate_entity_contents(json_contents, entity_lookup=json_contents)
+    entity_lookup = generate_entity_contents(json_contents)
 
     if entity_file is not None:
         with open(entity_file, 'w') as f:

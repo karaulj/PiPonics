@@ -1,6 +1,6 @@
 import unittest
 import sys, os
-import config_helper
+import config_helper as ch
 import json
 
 
@@ -16,12 +16,12 @@ class Test_get_json_file_contents(unittest.TestCase):
     def test_no_file(self):
         with self.assertRaises(IOError):
             json_file = ''
-            actual = config_helper.get_json_file_contents(json_file=json_file)
+            actual = ch.get_json_file_contents(json_file=json_file)
 
     def test_invalid_file(self):
         with self.assertRaises(json.decoder.JSONDecodeError):
             json_file = '/data/invalid.json'
-            actual = config_helper.get_json_file_contents(json_file=json_file)
+            actual = ch.get_json_file_contents(json_file=json_file)
 
     def test_1system_1tank_1sensor(self):
         expected = {
@@ -52,9 +52,9 @@ class Test_get_json_file_contents(unittest.TestCase):
         }
         }
         json_file = '/data/1system_1tank_1sensor.json'
-        actual = config_helper.get_json_file_contents(json_file=json_file)
+        actual = ch.get_json_file_contents(json_file=json_file)
         self.assertEqual(actual, expected)
-        self.assertEqual(actual["systems"][0]["tanks"][0]["sensors"][0]["type"], expected["systems"][0]["tanks"][0]["sensors"][0]["type"])
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_SENSORS_TYPE], expected[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_SENSORS_TYPE])
 
 
 if __name__ == "__main__":
