@@ -56,14 +56,13 @@ def generate_entity_contents(json_data:dict) -> dict:
         entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_UUID] = sys_uuid
 
         container_types = [ch.KEY_TANKS, ch.KEY_CROPS]
-        for container_type in container_types:
+        container_types_singular = [ch.KEY_TANK, ch.KEY_CROP]
+        for container_idx, container_type in enumerate(container_types):
             # get singular word for container
-            if container_type == ch.KEY_TANKS:
-                container_type_singular = ch.KEY_TANK
-            elif container_type == ch.KEY_CROPS:
-                container_type_singular = ch.KEY_CROP
-            else:
-                raise Exception("Unknown container type: '{}'".format(container_type))
+            try:
+                container_type_singular = container_types_singular[container_idx]
+            except IndexError:
+                raise Exception("No container type singular word for container type '{}'".format(container_type))
 
             # find containers (tanks or crops)
             try:
@@ -135,6 +134,10 @@ def generate_entity_contents(json_data:dict) -> dict:
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][container_type_singular] = container_name
+                # delete empty sensors from list (if any)
+                all_sensors = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS]
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS] = [sensor for sensor in all_sensors if sensor != {}]
+
 
     return entity_lookup
 
