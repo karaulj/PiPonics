@@ -47,7 +47,7 @@
       {
         "type": "pH",
         "units": "pH level",
-        "sql_data_type": "SMALLINT"
+        "sql_data_type": "FLOAT"
       },
       {
         "type": "temp",
