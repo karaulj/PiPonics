@@ -127,7 +127,7 @@ def generate_db_tables_str(json_data:dict) -> str:
     for i, system in enumerate(systems):
         # get system name
         try:
-            sys_name = system[ch.KEY_SYSTEMS_NAME].replace('/', '')
+            sys_name = system[ch.KEY_NAME].replace('/', '')
         except KeyError:
             sys_name = ch.get_default_system_name(i+1)
         print("Found system: '{}'".format(sys_name))
@@ -146,7 +146,7 @@ def generate_db_tables_str(json_data:dict) -> str:
         for j, tank in enumerate(tanks):
             # get tank name
             try:
-                tank_name = "{}".format(tank[ch.KEY_TANKS_NAME].replace('/', ''))
+                tank_name = "{}".format(tank[ch.KEY_NAME].replace('/', ''))
             except KeyError:
                 tank_name = ch.get_default_tank_name(j+1)
             print("Found tank: '{}'".format(tank_name))
@@ -168,7 +168,7 @@ def generate_db_tables_str(json_data:dict) -> str:
                     continue
                 # get sensor name
                 try:
-                    sensor_name = "{}".format(sensor[ch.KEY_SENSORS_NAME].replace('/', ''))
+                    sensor_name = "{}".format(sensor[ch.KEY_NAME].replace('/', ''))
                 except KeyError:
                     sensor_name = ch.get_default_sensor_name(sensor_type)
 
@@ -201,7 +201,7 @@ def generate_db_tables_str(json_data:dict) -> str:
         for j, crop in enumerate(crops):
             # get crop name
             try:
-                crop_name = "{}".format(crop[ch.KEY_CROPS_NAME].replace('/', ''))
+                crop_name = "{}".format(crop[ch.KEY_NAME].replace('/', ''))
             except KeyError:
                 crop_name = ch.get_default_crop_name(j+1)
             print("Found crop: '{}'".format(crop_name))
@@ -223,7 +223,7 @@ def generate_db_tables_str(json_data:dict) -> str:
                     continue
                 # get sensor name
                 try:
-                    sensor_name = "{}".format(sensor[ch.KEY_SENSORS_NAME].replace('/', ''))
+                    sensor_name = "{}".format(sensor[ch.KEY_NAME].replace('/', ''))
                 except KeyError:
                     sensor_name = ch.get_default_sensor_name(sensor_type)
 
