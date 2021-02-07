@@ -66,12 +66,8 @@ class Test_generate_entity_contents(unittest.TestCase):
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_UUID]))
         # should be no entry for empty sensor
         self.assertEqual(len(actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_SENSORS]), 0)
-        #self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]))
 
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_SYSTEM])
-        #self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM])
-
-        #self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK])
 
 
 
