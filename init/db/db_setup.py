@@ -7,19 +7,19 @@ import config_helper as ch
 """ START SQL QUERY HELPER FUNCTIONS """
 def get_sql_schema_create_str(schema_name:str) -> str:
     return """
-DROP SCHEMA IF EXISTS {0};
-CREATE SCHEMA {0};
+CREATE SCHEMA IF NOT EXISTS {0};
 """.format(schema_name)
 def get_sql_table_create_str(schema_name:str, table_name:str, columns:list) -> str:
     return """
-CREATE TABLE {0}.{1} (
+CREATE TABLE IF NOT EXISTS {0}.{1} (
   {2}
 );
 """.format(schema_name, table_name, ",\n  ".join(columns))
 def get_sql_insert_str(schema_name:str, table_name:str, col_names:list, col_vals:list) -> str:
     return """
 INSERT INTO {0}.{1} ({2})
-VALUES ({3});
+VALUES ({3})
+ON CONFLICT DO NOTHING;
 """.format(schema_name, table_name, ", ".join(col_names), ", ".join(col_vals))
 """ END SQL QUERY HELPER FUNCTIONS """
 
@@ -287,6 +287,7 @@ if __name__ == "__main__":
     if os.getenv('DB_INIT_SQL_FILE') != '':
         sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
     else:
+        print("Warning: DB_INIT_SQL_FILE environment variable is not set.")
         sql_file = None
 
     # run main program
