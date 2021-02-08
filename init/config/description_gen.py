@@ -177,9 +177,10 @@ if __name__ == "__main__":
     if os.getenv('DESCRIPTION_FILE') != '':
         entity_file = '/common/{}'.format(os.getenv('DESCRIPTION_FILE'))
     else:
+        print("Warning: DESCRIPTION_FILE environment variable is not set.")
         entity_file = None
 
     # run main program
-    main(config_file, entity_file=entity_file)  # write changes to config file
+    main(config_file, entity_file=entity_file)
     print("description file generation finished successfully")
     sys.exit(0)
