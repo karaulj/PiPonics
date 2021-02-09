@@ -1,0 +1,14 @@
+{
+  "systems": [
+    {
+      "name": "sys1",
+      "crops": [
+        {
+          "name": "crop1",
+          "nice_name": "Nutrient Film Bed",
+          "sensors": [{}]
+        }
+      ]
+    }
+  ]
+}

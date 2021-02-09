@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "sensors": [
+      {
+        "type": "pH",
+        "units": null,
+        "sql_data_type": "SMALLINT"
+      },
+      {
+        "type": "temp",
+        "units": "degrees F",
+        "sql_data_type": "FLOAT"
+      },
+      {
+        "type": "DO",
+        "units": "mg/L",
+        "sql_data_type": "FLOAT"
+      }
+    ]
+  }
+}

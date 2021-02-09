@@ -1,0 +1,42 @@
+{
+  "systems": [
+    {
+      "name": "mainsys",
+      "tanks": [
+        {
+          "name": "fishtank1",
+          "nice_name": "Primary Fish Tank",
+          "sensors": [
+            {
+              "type": "DO"
+            }
+          ],
+          "actuators": [
+            {
+              "type": "bubbler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "backupsys",
+      "nice_name": "Testing Ponics System (no fish)",
+      "crops": [
+        {
+          "name": "growbed1",
+          "sensors": [
+            {
+              "type": "temp"
+            }
+          ],
+          "actuators": [
+            {
+              "type": "biofilter"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
