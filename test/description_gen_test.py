@@ -69,7 +69,63 @@ class Test_generate_entity_contents(unittest.TestCase):
 
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS][0][ch.KEY_SYSTEM])
 
+    def test_1system_1tank_emptyactuator(self):
+        json_file = '/data/1system_1tank_emptyactuator.json'
+        data = ch.get_json_file_contents(json_file)
+        actual = description_gen.generate_entity_contents(json_data=data)
 
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS], [])
+
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], "sys1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NAME], "tank1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NICE_NAME], "Fish Tank")
+
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_UUID]))
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_UUID]))
+        # should be no entry for empty actuator
+        self.assertEqual(len(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS]), 0)
+
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SYSTEM])
+
+
+    def test_2system_full(self):
+        json_file = '/data/2system_full.json'
+        data = ch.get_json_file_contents(json_file)
+        actual = description_gen.generate_entity_contents(json_data=data)
+
+        self.assertEqual(len(actual[ch.KEY_SYSTEMS]), 2)
+
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_CROPS], [])
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], "mainsys")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NAME], "fishtank1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NICE_NAME], "Primary Fish Tank")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SYSTEM], "mainsys")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TYPE], "DO")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM], "mainsys")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK], "fishtank1")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_TYPE], "bubbler")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_SYSTEM], "mainsys")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_TANK], "fishtank1")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_UUID]))
+
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_TANKS], [])
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_NAME], "backupsys")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_NICE_NAME], "Testing Ponics System (no fish)")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_NAME], "growbed1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SYSTEM], "backupsys")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_TYPE], "temp")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM], "backupsys")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_CROP], "growbed1")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]))
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_TYPE], "biofilter")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_SYSTEM], "backupsys")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_CROP], "growbed1")
+        self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_UUID]))
 
 
 if __name__ == "__main__":

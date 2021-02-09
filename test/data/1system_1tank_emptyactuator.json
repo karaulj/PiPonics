@@ -1,0 +1,14 @@
+{
+  "systems": [
+    {
+      "name": "sys1",
+      "tanks": [
+        {
+          "name": "tank1",
+          "nice_name": "Fish Tank",
+          "actuators": [{}]
+        }
+      ]
+    }
+  ]
+}
