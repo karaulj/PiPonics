@@ -32,10 +32,10 @@ class Test_generate_metadata_sensor_table_str(unittest.TestCase):
         data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_metadata_sensor_table_str(json_data=data)
 
-        metadata_schema_str = "CREATE SCHEMA metadata;"
+        metadata_schema_str = "CREATE SCHEMA IF NOT EXISTS metadata;"
         self.assertIn(metadata_schema_str, actual)
 
-        create_table_str = """CREATE TABLE metadata.sensors (
+        create_table_str = """CREATE TABLE IF NOT EXISTS metadata.sensors (
   sensor_id SERIAL PRIMARY KEY,
   type VARCHAR NOT NULL,
   units VARCHAR,
@@ -44,15 +44,15 @@ class Test_generate_metadata_sensor_table_str(unittest.TestCase):
         self.assertIn(create_table_str, actual)
 
         insert_str = """INSERT INTO metadata.sensors (type, units, sql_data_type)
-VALUES ('pH', NULL, 'SMALLINT');"""
+VALUES ('pH', NULL, 'SMALLINT')"""
         self.assertIn(insert_str, actual)
 
         insert_str = """INSERT INTO metadata.sensors (type, units, sql_data_type)
-VALUES ('temp', 'degrees F', 'FLOAT');"""
+VALUES ('temp', 'degrees F', 'FLOAT')"""
         self.assertIn(insert_str, actual)
 
         insert_str = """INSERT INTO metadata.sensors (type, units, sql_data_type)
-VALUES ('DO', 'mg/L', 'FLOAT');"""
+VALUES ('DO', 'mg/L', 'FLOAT')"""
         self.assertIn(insert_str, actual)
 
 
@@ -77,11 +77,11 @@ class Test_generate_db_tables_str(unittest.TestCase):
         data = ch.get_json_file_contents(json_file)
         actual = db_setup.generate_db_tables_str(json_data=data)
 
-        create_schema_str = "CREATE SCHEMA sys1;"
+        create_schema_str = "CREATE SCHEMA IF NOT EXISTS sys1;"
         self.assertIn(create_schema_str, actual)
 
         create_table_str = """
-CREATE TABLE sys1.tank1_pH (
+CREATE TABLE IF NOT EXISTS sys1.tank1_pH (
   entry_id SERIAL PRIMARY KEY,
   timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP,
   reading SMALLINT NOT NULL
