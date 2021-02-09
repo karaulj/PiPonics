@@ -5,6 +5,7 @@ import json
 KEY_UUID = "uuid"
 KEY_NAME = "name"
 KEY_NICE_NAME = "nice_name"
+KEY_TYPE = "type"
 
 KEY_SYSTEM = "system"
 KEY_SYSTEMS = "systems"
@@ -17,18 +18,15 @@ KEY_CROPS = "crops"
 
 KEY_SENSOR = "sensor"
 KEY_SENSORS = "sensors"
-KEY_SENSORS_TYPE = "type"
 KEY_SENSORS_UNITS = "units"
 
 KEY_ACTUATOR = "actuator"
 KEY_ACTUATORS = "actuators"
-KEY_ACTUATORS_TYPE = "type"
 KEY_ACTUATORS_MAIN = "main"
 
 KEY_METADATA = "metadata"
 KEY_METADATA_SENSORS = "sensors"
 KEY_METADATA_SENSORS_ID = "sensor_id"
-KEY_METADATA_SENSORS_TYPE = "type"
 KEY_METADATA_SENSORS_UNITS = "units"
 KEY_METADATA_SENSORS_SQL_DATATYPE = "sql_data_type"
 

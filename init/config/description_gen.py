@@ -9,7 +9,7 @@ def get_sensor_units(json_data:dict, sensor_type:str) -> str:
     try:
         sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
         for sensor in sensor_list:
-            if sensor[ch.KEY_METADATA_SENSORS_TYPE] == sensor_type:
+            if sensor[ch.KEY_TYPE] == sensor_type:
                 return sensor[ch.KEY_METADATA_SENSORS_UNITS]
         return None
     except:
@@ -118,9 +118,9 @@ def generate_entity_contents(json_data:dict) -> dict:
                     print("Found sensor #{}".format(k+1))
                     # get sensor type
                     try:
-                        sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                        sensor_type = sensor[ch.KEY_TYPE].replace('/', '')
                     except KeyError:
-                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, container_name, k+1))
+                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
                     # add uuid for sensor
                     all_uuids, sensor_uuid = generate_uuid(all_uuids)

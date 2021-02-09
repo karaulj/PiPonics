@@ -28,7 +28,7 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
     try:
         sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
         for sensor in sensor_list:
-            if sensor[ch.KEY_METADATA_SENSORS_TYPE] == sensor_type:
+            if sensor[ch.KEY_TYPE] == sensor_type:
                 return sensor[ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
         return None
     except:
@@ -66,9 +66,9 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
     for i, sensor in enumerate(sensors):
         # get sensor type
         try:
-            sensor_type = "'{}'".format(sensor[ch.KEY_METADATA_SENSORS_TYPE])
+            sensor_type = "'{}'".format(sensor[ch.KEY_TYPE])
         except KeyError:
-            print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_TYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
+            print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_TYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
             continue
         # get sensor units
         try:
@@ -92,14 +92,14 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
             f_contents.append(get_sql_schema_create_str(ch.KEY_METADATA))
             columns = []
             columns.append("{} SERIAL PRIMARY KEY".format(ch.KEY_METADATA_SENSORS_ID))
-            columns.append("{} VARCHAR NOT NULL".format(ch.KEY_METADATA_SENSORS_TYPE))
+            columns.append("{} VARCHAR NOT NULL".format(ch.KEY_TYPE))
             columns.append("{} VARCHAR".format(ch.KEY_METADATA_SENSORS_UNITS))
             columns.append("{} VARCHAR NOT NULL".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE))
             f_contents.append(get_sql_table_create_str(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, columns))
             metadata_schema_created = True
 
         # add row to table
-        col_names = [ch.KEY_METADATA_SENSORS_TYPE, ch.KEY_METADATA_SENSORS_UNITS, ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
+        col_names = [ch.KEY_TYPE, ch.KEY_METADATA_SENSORS_UNITS, ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
         col_vals = [sensor_type, sensor_units, sensor_sql_data_type]
         f_contents.append(get_sql_insert_str(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, col_names, col_vals))
 
@@ -135,115 +135,69 @@ def generate_db_tables_str(json_data:dict) -> str:
         # only create system schema if at least one sensor
         sys_schema_created = False
 
-        # find tanks
-        try:
-            tanks = system[ch.KEY_TANKS]
-        except KeyError:
-            print("No '{}' property found for system '{}'".format(ch.KEY_TANKS, sys_name))
-            continue
-
-        # iterate through tanks in system
-        for j, tank in enumerate(tanks):
-            # get tank name
+        container_types = [ch.KEY_TANKS, ch.KEY_CROPS]
+        container_types_singular = [ch.KEY_TANK, ch.KEY_CROP]
+        for container_idx, container_type in enumerate(container_types):
+            # get singular word for container
             try:
-                tank_name = "{}".format(tank[ch.KEY_NAME].replace('/', ''))
-            except KeyError:
-                tank_name = ch.get_default_tank_name(j+1)
-            print("Found tank: '{}'".format(tank_name))
+                container_type_singular = container_types_singular[container_idx]
+            except IndexError:
+                raise Exception("No container type singular word for container type '{}'".format(container_type))
 
-            # find sensors
+            # find containers (tanks or crops)
             try:
-                sensors = tank[ch.KEY_SENSORS]
+                containers = system[container_type]
             except KeyError:
-                print("No '{}' property found for tank '{}'".format(ch.KEY_SENSORS, tank_name))
+                print("No '{}' property found for system '{}'".format(container_type, sys_name))
                 continue
 
-            # iterate through sensors in tank
-            for k, sensor in enumerate(sensors):
-                # get sensor type
+            # iterate through containers in system
+            for j, container in enumerate(containers):
+                # get container name
                 try:
-                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
+                    container_name = "{}".format(container[ch.KEY_NAME].replace('/', ''))
                 except KeyError:
-                    print("No '{}' property found for system '{}', tank '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, tank_name, k+1))
-                    continue
-                # get sensor name
+                    container_name = ch.get_default_container_name(container_type, j+1)
+                print("Found container: '{}'".format(container_name))
+
+                # find sensors
                 try:
-                    sensor_name = "{}".format(sensor[ch.KEY_NAME].replace('/', ''))
+                    sensors = container[ch.KEY_SENSORS]
                 except KeyError:
-                    sensor_name = ch.get_default_sensor_name(sensor_type)
-
-                if not sys_schema_created:
-                    # create schema for system (at least one sensor exists)
-                    f_contents.append(get_sql_schema_create_str(sys_name))
-                    sys_schema_created = True
-
-                # create table for sensor
-                sensor_datatype = get_sensor_sql_data_type(json_data, sensor_type)
-                if sensor_datatype is None:
+                    print("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, container_name))
                     continue
 
-                print("Found sensor: '{}'".format(sensor_name))
+                # iterate through sensors in tank
+                for k, sensor in enumerate(sensors):
+                    # get sensor type
+                    try:
+                        sensor_type = sensor[ch.KEY_TYPE].replace('/', '')
+                    except KeyError:
+                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
+                        continue
+                    # get sensor name
+                    try:
+                        sensor_name = "{}".format(sensor[ch.KEY_NAME].replace('/', ''))
+                    except KeyError:
+                        sensor_name = ch.get_default_sensor_name(sensor_type)
 
-                columns = []
-                columns.append("entry_id SERIAL PRIMARY KEY")
-                columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
-                columns.append("reading {} NOT NULL".format(sensor_datatype))
-                f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(tank_name, sensor_name), columns))
+                    if not sys_schema_created:
+                        # create schema for system (at least one sensor exists)
+                        f_contents.append(get_sql_schema_create_str(sys_name))
+                        sys_schema_created = True
 
-        # find crops
-        try:
-            crops = system[ch.KEY_CROPS]
-        except KeyError:
-            print("No '{}' property found for system '{}'".format(ch.KEY_CROPS, sys_name))
-            continue
+                    # create table for sensor
+                    sensor_datatype = get_sensor_sql_data_type(json_data, sensor_type)
+                    if sensor_datatype is None:
+                        sensor_datatype = "FLOAT"   # FLOAT by default
 
-        # iterate through crops in system
-        for j, crop in enumerate(crops):
-            # get crop name
-            try:
-                crop_name = "{}".format(crop[ch.KEY_NAME].replace('/', ''))
-            except KeyError:
-                crop_name = ch.get_default_crop_name(j+1)
-            print("Found crop: '{}'".format(crop_name))
+                    print("Found sensor: '{}'".format(sensor_name))
 
-            # find sensors
-            try:
-                sensors = crop[ch.KEY_SENSORS]
-            except KeyError:
-                print("No '{}' property found for crop '{}'".format(ch.KEY_SENSORS, crop_name))
-                continue
-
-            # iterate through sensors in crop
-            for k, sensor in enumerate(sensors):
-                # get sensor type
-                try:
-                    sensor_type = sensor[ch.KEY_SENSORS_TYPE].replace('/', '')
-                except KeyError:
-                    print("No '{}' property found for system '{}', crop '{}', sensor #{}".format(ch.KEY_SENSORS_TYPE, sys_name, crop_name, k+1))
-                    continue
-                # get sensor name
-                try:
-                    sensor_name = "{}".format(sensor[ch.KEY_NAME].replace('/', ''))
-                except KeyError:
-                    sensor_name = ch.get_default_sensor_name(sensor_type)
-
-                if not sys_schema_created:
-                    # create schema for system (at least one sensor exists)
-                    f_contents.append(get_sql_schema_create_str(sys_name))
-                    sys_schema_created = True
-
-                # create table for sensor
-                sensor_datatype = get_sensor_sql_data_type(json_data, sensor_type)
-                if sensor_datatype is None:
-                    continue
-
-                print("Found sensor: '{}'".format(sensor_name))
-
-                columns = []
-                columns.append("entry_id SERIAL PRIMARY KEY")
-                columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
-                columns.append("reading {} NOT NULL".format(sensor_datatype))
-                f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(crop_name, sensor_name), columns))
+                    columns = []
+                    columns.append("entry_id SERIAL PRIMARY KEY")
+                    columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
+                    columns.append("reading {} NOT NULL".format(sensor_datatype))
+                    f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(container_name, sensor_name), columns))
 
     return ''.join(f_contents)
 
