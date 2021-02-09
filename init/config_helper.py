@@ -54,10 +54,10 @@ def get_json_file_contents(json_file:str, print_func=print) -> dict:
 
 def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
     try:
-        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
+        sensor_list = json_data[KEY_METADATA][KEY_METADATA_SENSORS]
         for sensor in sensor_list:
-            if sensor[ch.KEY_TYPE] == sensor_type:
-                return sensor[ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
+            if sensor[KEY_TYPE] == sensor_type:
+                return sensor[KEY_METADATA_SENSORS_SQL_DATATYPE]
         return None
     except:
         return None
@@ -65,10 +65,10 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
 
 def get_sensor_units(json_data:dict, sensor_type:str) -> str:
     try:
-        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
+        sensor_list = json_data[KEY_METADATA][KEY_METADATA_SENSORS]
         for sensor in sensor_list:
-            if sensor[ch.KEY_TYPE] == sensor_type:
-                return sensor[ch.KEY_METADATA_SENSORS_UNITS]
+            if sensor[KEY_TYPE] == sensor_type:
+                return sensor[KEY_METADATA_SENSORS_UNITS]
         return None
     except:
         return None
