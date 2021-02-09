@@ -1,5 +1,6 @@
 import sys, os
 import json
+import threading
 from flask import (
     Flask, request, make_response
 )
@@ -11,7 +12,9 @@ from http_const import (
 )
 import entity_utils as eu
 
-sem = None
+sem = None          # Static Entity Manager object
+dal = None          # Data Access Layer object
+ioc = None          # IO Controller object
 app = Flask(__name__)
 
 
@@ -193,10 +196,25 @@ def get_all_sensors():
 
 if __name__ == "__main__":
     #os.listdir('/home')
+    flask_thread = None
+    stop_thr_event = None
+    uart_rx_thread = None
     try:
         description_file = "/common/{}".format(os.getenv('DESCRIPTION_FILE'))
         sem = eu.StaticEntityManger(description_file)
-        app.run(host='0.0.0.0')
+        dal = None
+        ioc = None
+        """
+        stop_thr_event = threading.Event()
+        uart_rx_thread = threading.Thread(target=, args=(stop_thr_event,))
+        uart_rx_thread.start()
+        """
+        flask_thread = threading.Thread(target=app.run, args=('0.0.0.0',))
+        flask_thread.start()
+        #app.run(host='0.0.0.0')
     except:
         "An error occurred while trying to start the backend API server."
+        if uart_rx_thread is not None and stop_thr_event is not None:
+            # stop uart rx thread 'peacefully'
+            stop_thr_event.set()
         raise
