@@ -52,6 +52,28 @@ def get_json_file_contents(json_file:str, print_func=print) -> dict:
     return None
 
 
+def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
+    try:
+        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
+        for sensor in sensor_list:
+            if sensor[ch.KEY_TYPE] == sensor_type:
+                return sensor[ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
+        return None
+    except:
+        return None
+
+
+def get_sensor_units(json_data:dict, sensor_type:str) -> str:
+    try:
+        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
+        for sensor in sensor_list:
+            if sensor[ch.KEY_TYPE] == sensor_type:
+                return sensor[ch.KEY_METADATA_SENSORS_UNITS]
+        return None
+    except:
+        return None
+
+
 def get_default_system_name(*args, **kwargs):
     return 'sys{}'.format(args[0])
 
