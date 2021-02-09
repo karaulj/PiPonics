@@ -24,17 +24,6 @@ ON CONFLICT DO NOTHING;
 """ END SQL QUERY HELPER FUNCTIONS """
 
 
-def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
-    try:
-        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
-        for sensor in sensor_list:
-            if sensor[ch.KEY_TYPE] == sensor_type:
-                return sensor[ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
-        return None
-    except:
-        return None
-
-
 def generate_metadata_sensor_table_str(json_data:dict) -> str:
     """Return sql script for generating metadata table.
 
@@ -187,9 +176,7 @@ def generate_db_tables_str(json_data:dict) -> str:
                         sys_schema_created = True
 
                     # create table for sensor
-                    sensor_datatype = get_sensor_sql_data_type(json_data, sensor_type)
-                    if sensor_datatype is None:
-                        sensor_datatype = "FLOAT"   # FLOAT by default
+                    sensor_datatype = ch.get_sensor_sql_data_type(json_data, sensor_type)
 
                     print("Found sensor: '{}'".format(sensor_name))
 

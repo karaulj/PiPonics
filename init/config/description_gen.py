@@ -5,17 +5,6 @@ import uuid
 import config_helper as ch
 
 
-def get_sensor_units(json_data:dict, sensor_type:str) -> str:
-    try:
-        sensor_list = json_data[ch.KEY_METADATA][ch.KEY_METADATA_SENSORS]
-        for sensor in sensor_list:
-            if sensor[ch.KEY_TYPE] == sensor_type:
-                return sensor[ch.KEY_METADATA_SENSORS_UNITS]
-        return None
-    except:
-        return None
-
-
 def generate_uuid(all_uuids:list):
     new_uuid = str(uuid.uuid4())
     while new_uuid in all_uuids:
@@ -95,8 +84,14 @@ def generate_entity_contents(json_data:dict) -> dict:
                     actuators = []
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS] = actuators
                 # iterate through actuators
-                for k in range(len(actuators)):
+                for k, actuator in enumerate(actuators):
                     print("Found actuator #{}".format(k+1))
+                    # get actuator type
+                    try:
+                        actuator[ch.KEY_TYPE]
+                    except KeyError:
+                        print("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
+                        continue
                     # add uuid for actuator
                     all_uuids, actuator_uuid = generate_uuid(all_uuids)
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid
@@ -129,14 +124,18 @@ def generate_entity_contents(json_data:dict) -> dict:
                     try:
                         entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = sensor[ch.KEY_SENSORS_UNITS]
                     except KeyError:
-                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = get_sensor_units(json_data, sensor_type)
+                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSORS_UNITS] = ch.get_sensor_units(json_data, sensor_type)
                     # add system name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][container_type_singular] = container_name
+
                 # delete empty sensors from list (if any)
                 all_sensors = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS]
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS] = [sensor for sensor in all_sensors if sensor != {}]
+                # delete empty actuators from list (if any)
+                all_actuators = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS]
+                entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS] = [actuator for actuator in all_actuators if actuator != {}]
 
 
     return entity_lookup

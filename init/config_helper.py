@@ -58,9 +58,9 @@ def get_sensor_sql_data_type(json_data:dict, sensor_type:str) -> str:
         for sensor in sensor_list:
             if sensor[KEY_TYPE] == sensor_type:
                 return sensor[KEY_METADATA_SENSORS_SQL_DATATYPE]
-        return None
+        return "FLOAT"
     except:
-        return None
+        return "FLOAT"
 
 
 def get_sensor_units(json_data:dict, sensor_type:str) -> str:
