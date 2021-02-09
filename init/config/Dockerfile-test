@@ -8,10 +8,7 @@ WORKDIR /home
 RUN mkdir /data
 
 # copy python files
-COPY db_setup.py /home/db_setup.py
-COPY test/db_setup_test.py /home/db_setup_test.py
-#COPY test/data /data
+COPY description_gen.py /home/description_gen.py
 
 # run db setup
-CMD ["python", "db_setup_test.py"]
-
+CMD ["python", "/home/description_gen_test.py"]

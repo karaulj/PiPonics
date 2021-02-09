@@ -1,0 +1,13 @@
+# use python image
+FROM python:3.9.1-slim
+
+# set workdir
+WORKDIR /home
+
+# create dir for holding test config json files
+RUN mkdir /data
+
+# copy python files
+
+# run db setup
+CMD ["python", "/home/config_helper_test.py"]
