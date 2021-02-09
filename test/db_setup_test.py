@@ -59,11 +59,9 @@ VALUES ('DO', 'mg/L', 'FLOAT')"""
 class Test_generate_db_tables_str(unittest.TestCase):
 
     def setUp(self):
-        return
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
     def tearDown(self):
-        return
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
