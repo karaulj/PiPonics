@@ -76,5 +76,11 @@ class Test_get_json_file_contents(unittest.TestCase):
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0], {"type":"biofilter"})
 
 
+    def test_emptysystem(self):
+        json_file = '/data/emptysystem.json'
+        actual = ch.get_json_file_contents(json_file=json_file)
+        self.assertEqual(actual, {"systems": [{}]})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

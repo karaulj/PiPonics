@@ -106,6 +106,15 @@ CREATE TABLE IF NOT EXISTS sys1.tank1_pH (
         create_sys2_table_str = "CREATE TABLE IF NOT EXISTS backupsys.growbed1_temp"
         self.assertIn(create_sys2_table_str, actual)
 
+    def test_emptysystem(self):
+        json_file = '/data/emptysystem.json'
+        data = ch.get_json_file_contents(json_file)
+        actual = db_setup.generate_db_tables_str(json_data=data)
+
+        expected = "\n--Ponics Database Tables Script (auto-generated)\n"
+
+        self.assertEqual(actual, expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
