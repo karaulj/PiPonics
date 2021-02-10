@@ -7,7 +7,5 @@ WORKDIR /home
 # create dir for holding test config json files
 RUN mkdir /data
 
-# copy python files
-
-# run db setup
+# run tests
 CMD ["python", "/home/config_helper_test.py"]

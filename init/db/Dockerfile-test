@@ -10,5 +10,5 @@ RUN mkdir /data
 # copy python files
 COPY db_setup.py /home/db_setup.py
 
-# run db setup
+# run tests
 CMD ["python", "/home/db_setup_test.py"]

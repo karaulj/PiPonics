@@ -10,5 +10,5 @@ RUN mkdir /data
 # copy python files
 COPY description_gen.py /home/description_gen.py
 
-# run db setup
+# run tests
 CMD ["python", "/home/description_gen_test.py"]
