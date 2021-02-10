@@ -4,25 +4,31 @@ services:
   init-test:
     build:
       context: ./init
-      dockerfile: test/Dockerfile-test
+      dockerfile: Dockerfile-test
+    volumes:
+      - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
+      - ./test/data:/data
+      - ./test/config_helper_test.py:/home/config_helper_test.py
 
   db-init-test:
     build:
       context: ./init/db
-      dockerfile: test/Dockerfile-test
+      dockerfile: Dockerfile-test
     volumes:
       - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
-      - ./init/test/data:/data
+      - ./test/data:/data
+      - ./test/db_setup_test.py:/home/db_setup_test.py
     depends_on:
       - db-init
 
   config-init-test:
     build:
       context: ./init/config
-      dockerfile: test/Dockerfile-test
+      dockerfile: Dockerfile-test
     volumes:
       - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
-      - ./init/test/data:/data
+      - ./test/data:/data
+      - ./test/description_gen_test.py:/home/description_gen_test.py
     depends_on:
       - config-init
 

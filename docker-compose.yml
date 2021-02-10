@@ -55,21 +55,21 @@ services:
     #command: "/bin/sh -c echo 'waiting for db init script...'; sleep 1; && postgres"
     #command: /bin/sh -c "echo 'hello world'"
 
-  backend:
-    build:
-      context: ./backend-server-flask
-      dockerfile: Dockerfile
-    depends_on:
-      - config-init
-      - db-init
-    volumes:
-      - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
-      - common:/common
-    environment:
-      CONFIG_HELPER_PYTHON_FILE: ${CONFIG_HELPER_PYTHON_FILE}
-      DESCRIPTION_FILE: ${DESCRIPTION_FILE}
-    ports:
-      - "5000:${API_PORT}"
+  # backend:
+  #   build:
+  #     context: ./backend-server-flask
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - config-init
+  #     - db-init
+  #   volumes:
+  #     - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
+  #     - common:/common
+  #   environment:
+  #     CONFIG_HELPER_PYTHON_FILE: ${CONFIG_HELPER_PYTHON_FILE}
+  #     DESCRIPTION_FILE: ${DESCRIPTION_FILE}
+  #   ports:
+  #     - "5000:${API_PORT}"
 
   # frontend:
   #   build: './frontend-server-angular'
