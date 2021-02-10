@@ -124,15 +124,7 @@ def generate_db_tables_str(json_data:dict) -> str:
         # only create system schema if at least one sensor
         sys_schema_created = False
 
-        container_types = [ch.KEY_TANKS, ch.KEY_CROPS]
-        container_types_singular = [ch.KEY_TANK, ch.KEY_CROP]
-        for container_idx, container_type in enumerate(container_types):
-            # get singular word for container
-            try:
-                container_type_singular = container_types_singular[container_idx]
-            except IndexError:
-                raise Exception("No container type singular word for container type '{}'".format(container_type))
-
+        for container_type, container_type_singular in ch.CONTAINER_TYPES.items():
             # find containers (tanks or crops)
             try:
                 containers = system[container_type]

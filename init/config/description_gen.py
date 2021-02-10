@@ -19,7 +19,6 @@ def generate_entity_contents(json_data:dict) -> dict:
     Keyword arguments:
     json_data -- json object, root of config file (required).
     """
-
     entity_lookup = json_data
 
     # find systems
@@ -44,15 +43,7 @@ def generate_entity_contents(json_data:dict) -> dict:
         all_uuids, sys_uuid = generate_uuid(all_uuids)
         entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_UUID] = sys_uuid
 
-        container_types = [ch.KEY_TANKS, ch.KEY_CROPS]
-        container_types_singular = [ch.KEY_TANK, ch.KEY_CROP]
-        for container_idx, container_type in enumerate(container_types):
-            # get singular word for container
-            try:
-                container_type_singular = container_types_singular[container_idx]
-            except IndexError:
-                raise Exception("No container type singular word for container type '{}'".format(container_type))
-
+        for container_type, container_type_singular in ch.CONTAINER_TYPES.items():
             # find containers (tanks or crops)
             try:
                 containers = system[container_type]
@@ -100,7 +91,6 @@ def generate_entity_contents(json_data:dict) -> dict:
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][container_type_singular] = container_name
 
-
                 # find sensors
                 try:
                     sensors = container[ch.KEY_SENSORS]
@@ -136,7 +126,6 @@ def generate_entity_contents(json_data:dict) -> dict:
                 # delete empty actuators from list (if any)
                 all_actuators = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS]
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS] = [actuator for actuator in all_actuators if actuator != {}]
-
 
     return entity_lookup
 

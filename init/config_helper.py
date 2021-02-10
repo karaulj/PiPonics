@@ -30,6 +30,12 @@ KEY_METADATA_SENSORS_ID = "sensor_id"
 KEY_METADATA_SENSORS_UNITS = "units"
 KEY_METADATA_SENSORS_SQL_DATATYPE = "sql_data_type"
 
+# container type to container type singular lookup
+CONTAINER_TYPES = {
+    KEY_TANKS: KEY_TANK,
+    KEY_CROPS: KEY_CROP
+}
+
 
 def get_json_file_contents(json_file:str, print_func=print) -> dict:
     try:
