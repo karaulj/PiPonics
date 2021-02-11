@@ -130,12 +130,12 @@ def generate_entity_contents(json_data:dict) -> dict:
     return entity_lookup
 
 
-def main(config_file:str, entity_file:str=None) -> int:
+def generate_description_file(config_file:str, output_file:str=None) -> int:
     """ Generates a description json file containing uuids for all entities. Expects a config json file at /home/$CONFIG_FILE.
 
     Keyword arguments:
     config_file -- path to config json file (required).
-    entity_file -- filename of output description json. Omits writing if None (default).
+    output_file -- filename of output description json. Omits writing if None (default).
     """
     json_contents = ch.get_json_file_contents(config_file)
     if json_contents is None:
@@ -144,10 +144,10 @@ def main(config_file:str, entity_file:str=None) -> int:
 
     entity_lookup = generate_entity_contents(json_contents)
 
-    if entity_file is not None:
-        with open(entity_file, 'w') as f:
+    if output_file is not None:
+        with open(output_file, 'w') as f:
             f.write(json.dumps(entity_lookup, indent=2))
-        print("Wrote description file to '{}'".format(entity_file))
+        print("Wrote description file to '{}'".format(output_file))
 
     return 0
 
@@ -163,12 +163,12 @@ if __name__ == "__main__":
         sys.exit(1)
     # get description file
     if os.getenv('DESCRIPTION_FILE') != '':
-        entity_file = '/common/{}'.format(os.getenv('DESCRIPTION_FILE'))
+        output_file = '/common/{}'.format(os.getenv('DESCRIPTION_FILE'))
     else:
         print("Warning: DESCRIPTION_FILE environment variable is not set.")
-        entity_file = None
+        output_file = None
 
     # run main program
-    main(config_file, entity_file=entity_file)
+    generate_description_file(config_file, output_file=output_file)
     print("description file generation finished successfully")
     sys.exit(0)
