@@ -17,10 +17,18 @@ dal = None          # Data Access Layer object
 ioc = None          # IO Controller object
 app = Flask(__name__)
 
+""" ADMIN METHODS """
 
 @app.route('/test', methods=["GET"])
-def hello_world():
-    return 'Hello, World!'
+def test_endpoint():
+    return 'success'
+@app.route('/shutdown', methods=['GET', 'POST'])
+def shutdown():
+    shutdown_func = request.environ.get('werkzeug.server.shutdown')
+    if shutdown_func is None:
+        raise RuntimeError('Not running with the Werkzeug Server; cannot shut down server.')
+    shutdown_func()
+    return 'Shutting down server...'
 
 """ SYSTEM API METHODS """
 
@@ -194,27 +202,41 @@ def get_all_sensors():
     return response
 
 
-if __name__ == "__main__":
-    #os.listdir('/home')
+def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_port:str='5000'):
     flask_thread = None
     stop_thr_event = None
     uart_rx_thread = None
     try:
-        description_file = "/common/{}".format(os.getenv('DESCRIPTION_FILE'))
-        sem = eu.StaticEntityManger(description_file)
+        global sem
+        global dal
+        global ioc
+        if description_file is not None:
+            print("Warning: No description file provided.")
+            sem = eu.StaticEntityManger(description_file)
         dal = None
         ioc = None
+
+        flask_thread = threading.Thread(target=app.run, args=(flask_host, flask_port))
+        flask_thread.start()
         """
         stop_thr_event = threading.Event()
         uart_rx_thread = threading.Thread(target=, args=(stop_thr_event,))
         uart_rx_thread.start()
         """
-        flask_thread = threading.Thread(target=app.run, args=('0.0.0.0',))
-        flask_thread.start()
-        #app.run(host='0.0.0.0')
     except:
-        "An error occurred while trying to start the backend API server."
+        print("An error occurred while trying to start the backend API server.")
         if uart_rx_thread is not None and stop_thr_event is not None:
             # stop uart rx thread 'peacefully'
             stop_thr_event.set()
         raise
+
+
+if __name__ == "__main__":
+    #os.listdir('/home')
+    if os.getenv('DESCRIPTION_FILE') != '':
+        description_file = "/common/{}".format(os.getenv('DESCRIPTION_FILE'))
+    else:
+        print("Error: DESCRIPTION_FILE environment variable not set.")
+        sys.exit(1)
+    # start server
+    start_api_server(description_file, flask_host='0.0.0.0')
