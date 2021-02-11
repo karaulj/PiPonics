@@ -8,10 +8,10 @@ from http import (
 )
 import requests
 
-import config_helper as ch
 import description_gen as dg
+import config_utils as ch
 import entity_utils as eu
-from http_const import (
+from http_utils import (
     HTTPHeaders, HTTPHeaderValues
 )
 import main

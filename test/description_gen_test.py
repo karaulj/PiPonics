@@ -1,8 +1,10 @@
 import unittest
 import sys, os
-import description_gen, config_helper as ch
 import json
 import uuid
+
+import description_gen
+import config_utils as ch
 
 
 def is_valid_uuid(uuid_str):

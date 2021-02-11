@@ -7,7 +7,7 @@ from flask import (
 from http import (
     HTTPStatus
 )
-from http_const import (
+from http_utils import (
     HTTPHeaders, HTTPHeaderValues
 )
 import entity_utils as eu

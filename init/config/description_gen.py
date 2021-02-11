@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import uuid
-import config_helper as ch
+import config_utils as ch
 
 
 def generate_uuid(all_uuids:list):

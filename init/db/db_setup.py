@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-import config_helper as ch
+import config_utils as ch
 
 
 """ START SQL QUERY HELPER FUNCTIONS """
@@ -9,12 +9,12 @@ def get_sql_schema_create_str(schema_name:str) -> str:
     return """
 CREATE SCHEMA IF NOT EXISTS {0};
 """.format(schema_name)
-def get_sql_table_create_str(schema_name:str, table_name:str, columns:list) -> str:
+def get_sql_table_create_str(table_name:str, columns:list) -> str:
     return """
-CREATE TABLE IF NOT EXISTS {0}.{1} (
-  {2}
+CREATE TABLE IF NOT EXISTS {0} (
+  {1}
 );
-""".format(schema_name, table_name, ",\n  ".join(columns))
+""".format(table_name, ",\n  ".join(columns))
 def get_sql_insert_str(schema_name:str, table_name:str, col_names:list, col_vals:list) -> str:
     return """
 INSERT INTO {0}.{1} ({2})
@@ -84,7 +84,8 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
             columns.append("{} VARCHAR NOT NULL".format(ch.KEY_TYPE))
             columns.append("{} VARCHAR".format(ch.KEY_METADATA_SENSORS_UNITS))
             columns.append("{} VARCHAR NOT NULL".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE))
-            f_contents.append(get_sql_table_create_str(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, columns))
+            metadata_sensors_tablename = '{}.{}'.format(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS)
+            f_contents.append(get_sql_table_create_str(metadata_sensors_tablename, columns))
             metadata_schema_created = True
 
         # add row to table
@@ -176,7 +177,8 @@ def generate_db_tables_str(json_data:dict) -> str:
                     columns.append("entry_id SERIAL PRIMARY KEY")
                     columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                     columns.append("reading {} NOT NULL".format(sensor_datatype))
-                    f_contents.append(get_sql_table_create_str(sys_name, '{}_{}'.format(container_name, sensor_name), columns))
+                    sensor_tablename = ch.get_sensor_tablename(sys_name, container_name, sensor_name)
+                    f_contents.append(get_sql_table_create_str(sensor_tablename, columns))
 
     return ''.join(f_contents)
 

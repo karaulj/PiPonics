@@ -1,7 +1,9 @@
 import unittest
 import sys, os
-import db_setup, config_helper as ch
 import json
+
+import db_setup
+import config_utils as ch
 
 
 class Test_generate_metadata_sensor_table_str(unittest.TestCase):

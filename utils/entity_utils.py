@@ -1,5 +1,5 @@
 import json
-import config_helper as ch
+import config_utils as ch
 
 ERR_UNKNOWN = 0
 ERR_UNKNOWN_MSG = "An internal server error was encountered and your request could not be completed."

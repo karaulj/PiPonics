@@ -1,7 +1,8 @@
 import unittest
 import sys, os
-import config_helper as ch
 import json
+
+import config_utils as ch
 
 
 class Test_get_json_file_contents(unittest.TestCase):

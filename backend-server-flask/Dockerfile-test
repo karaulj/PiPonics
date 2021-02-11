@@ -9,8 +9,6 @@ RUN mkdir /data
 
 # copy python files
 COPY main.py /home/main.py
-COPY http_const.py /home/http_const.py
-COPY entity_utils.py /home/entity_utils.py
 COPY requirements.txt /home/requirements.txt
 
 # install python packages
