@@ -18,8 +18,6 @@ services:
       - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
       - ./test/data:/data
       - ./test/db_setup_test.py:/home/db_setup_test.py
-    depends_on:
-      - db-init
 
   config-init-test:
     build:
@@ -29,21 +27,14 @@ services:
       - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
       - ./test/data:/data
       - ./test/description_gen_test.py:/home/description_gen_test.py
-    depends_on:
-      - config-init
 
-
-  #
-  # backend:
-  #   build: './backend-server-flask'
-  #   depends_on:
-  #     - "db"
-  #   ports:
-  #     - "5000:${API_PORT}"
-  #
-  # frontend:
-  #   build: './frontend-server-angular'
-  #   depends_on:
-  #     - "backend"
-  #   ports:
-  #     - "4200:${USER_PORT}"
+  backend-test:
+    build:
+      context: ./backend-server-flask
+      dockerfile: Dockerfile-test
+    volumes:
+      - ./init/${CONFIG_HELPER_PYTHON_FILE}:/home/${CONFIG_HELPER_PYTHON_FILE}
+      - ./init/config/description_gen.py:/home/description_gen.py
+      - ./test/data:/data
+      - ./test/backend_test.py:/home/backend_test.py
+      - ./test/backend_test-requirements.txt:/home/backend_test-requirements.txt
