@@ -15,6 +15,7 @@ COPY requirements.txt /home/requirements.txt
 
 # install python packages
 RUN pip install -r /home/requirements.txt
+RUN pip install requests
 
-# run db setup
+# run tests
 CMD ["python", "/home/backend_test.py"]
