@@ -11,6 +11,7 @@ from http_utils import (
     HTTPHeaders, HTTPHeaderValues
 )
 import entity_utils as eu
+import db_helper
 
 sem = None          # Static Entity Manager object
 dal = None          # Data Access Layer object
@@ -210,10 +211,34 @@ def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_por
         global sem
         global dal
         global ioc
+        # init sem
         if description_file is not None:
             print("Warning: No description file provided.")
             sem = eu.StaticEntityManger(description_file)
-        dal = None
+        # init dal
+        do_dal_init = True
+        dal_env_vars = [
+            "POSTGRES_DB",
+            "POSTGRES_HOST",
+            "POSTGRES_PORT",
+            "POSTGRES_USER",
+            "POSTGRES_PASSWORD"
+        ]
+        for env_var in dal_env_vars:
+            if os.getenv(env_var) == '':
+                do_dal_init = False
+            print(os.getenv(env_var))
+        if do_dal_init:
+            print(os.getenv('POSTGRES_HOST')=='127.0.0.1')
+            dal = db_helper.DataAccessLayer(
+                dbname = os.getenv('POSTGRES_DB'),
+                user = os.getenv('POSTGRES_USER'),
+                password = os.getenv('POSTGRES_PASSWORD'),
+                host = os.getenv('POSTGRES_HOST'),
+                #host = '192.168.254.28',
+                #host = 'http://127.0.0.1',
+                port = os.getenv('POSTGRES_PORT'),
+            )
         ioc = None
 
         flask_thread = threading.Thread(target=app.run, args=(flask_host, flask_port))
@@ -239,4 +264,8 @@ if __name__ == "__main__":
         print("Error: DESCRIPTION_FILE environment variable not set.")
         sys.exit(1)
     # start server
-    start_api_server(description_file, flask_host='0.0.0.0')
+    if os.getenv('API_PORT') != '':
+        start_api_server(description_file, flask_host='0.0.0.0', flask_port=os.getenv('API_PORT'))
+    else:
+        print("API_PORT environment variable not set. Using default port")
+        start_api_server(description_file, flask_host='0.0.0.0')

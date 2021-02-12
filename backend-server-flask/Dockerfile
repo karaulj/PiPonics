@@ -1,5 +1,5 @@
 # Use python image
-FROM python:3.9.1-slim
+FROM python:3.9.1
 
 # set workdir for local python modules
 WORKDIR /home
@@ -9,6 +9,7 @@ RUN mkdir /common
 
 # move app files
 COPY main.py /home/main.py
+COPY db_helper.py /home/db_helper.py
 COPY requirements.txt /home/requirements.txt
 
 # install python packages
