@@ -80,10 +80,6 @@ def get_sensor_units(json_data:dict, sensor_type:str) -> str:
         return None
 
 
-def get_sensor_tablename(system_name:str, container_name:str, sensor_name:str):
-    return '{}.{}_{}'.format(system_name, container_name, sensor_name)
-
-
 def get_default_system_name(*args, **kwargs):
     return 'sys{}'.format(args[0])
 
