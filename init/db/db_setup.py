@@ -2,26 +2,7 @@ import os
 import sys
 import json
 import config_utils as ch
-
-
-""" START SQL QUERY HELPER FUNCTIONS """
-def get_sql_schema_create_str(schema_name:str) -> str:
-    return """
-CREATE SCHEMA IF NOT EXISTS {0};
-""".format(schema_name)
-def get_sql_table_create_str(table_name:str, columns:list) -> str:
-    return """
-CREATE TABLE IF NOT EXISTS {0} (
-  {1}
-);
-""".format(table_name, ",\n  ".join(columns))
-def get_sql_insert_str(schema_name:str, table_name:str, col_names:list, col_vals:list) -> str:
-    return """
-INSERT INTO {0}.{1} ({2})
-VALUES ({3})
-ON CONFLICT DO NOTHING;
-""".format(schema_name, table_name, ", ".join(col_names), ", ".join(col_vals))
-""" END SQL QUERY HELPER FUNCTIONS """
+import db_utils as dbu
 
 
 def generate_metadata_sensor_table_str(json_data:dict) -> str:
@@ -76,22 +57,22 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
             print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
             continue
 
+        metadata_sensors_tablename = '{}.{}'.format(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS)
         if not metadata_schema_created:
             # create metadata schema and sensor metadata table
-            f_contents.append(get_sql_schema_create_str(ch.KEY_METADATA))
+            f_contents.append(dbu.get_sql_schema_create_str(ch.KEY_METADATA))
             columns = []
             columns.append("{} SERIAL PRIMARY KEY".format(ch.KEY_METADATA_SENSORS_ID))
             columns.append("{} VARCHAR NOT NULL".format(ch.KEY_TYPE))
             columns.append("{} VARCHAR".format(ch.KEY_METADATA_SENSORS_UNITS))
             columns.append("{} VARCHAR NOT NULL".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE))
-            metadata_sensors_tablename = '{}.{}'.format(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS)
-            f_contents.append(get_sql_table_create_str(metadata_sensors_tablename, columns))
+            f_contents.append(dbu.get_sql_table_create_str(metadata_sensors_tablename, columns))
             metadata_schema_created = True
 
         # add row to table
         col_names = [ch.KEY_TYPE, ch.KEY_METADATA_SENSORS_UNITS, ch.KEY_METADATA_SENSORS_SQL_DATATYPE]
         col_vals = [sensor_type, sensor_units, sensor_sql_data_type]
-        f_contents.append(get_sql_insert_str(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, col_names, col_vals))
+        f_contents.append(dbu.get_sql_insert_str(metadata_sensors_tablename, col_names, col_vals))
 
     return ''.join(f_contents)
 
@@ -165,7 +146,7 @@ def generate_db_tables_str(json_data:dict) -> str:
 
                     if not sys_schema_created:
                         # create schema for system (at least one sensor exists)
-                        f_contents.append(get_sql_schema_create_str(sys_name))
+                        f_contents.append(dbu.get_sql_schema_create_str(sys_name))
                         sys_schema_created = True
 
                     # create table for sensor
@@ -177,8 +158,8 @@ def generate_db_tables_str(json_data:dict) -> str:
                     columns.append("entry_id SERIAL PRIMARY KEY")
                     columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
                     columns.append("reading {} NOT NULL".format(sensor_datatype))
-                    sensor_tablename = ch.get_sensor_tablename(sys_name, container_name, sensor_name)
-                    f_contents.append(get_sql_table_create_str(sensor_tablename, columns))
+                    sensor_tablename = dbu.get_sensor_tablename(sys_name, container_name, sensor_name)
+                    f_contents.append(dbu.get_sql_table_create_str(sensor_tablename, columns))
 
     return ''.join(f_contents)
 
