@@ -217,28 +217,36 @@ def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_por
             sem = eu.StaticEntityManger(description_file)
         # init dal
         do_dal_init = True
-        dal_env_vars = [
-            "POSTGRES_DB",
-            "POSTGRES_HOST",
-            "POSTGRES_PORT",
-            "POSTGRES_USER",
-            "POSTGRES_PASSWORD"
-        ]
-        for env_var in dal_env_vars:
-            if os.getenv(env_var) == '':
-                do_dal_init = False
-            print(os.getenv(env_var))
+        pg_dbname = os.getenv('POSTGRES_DB')
+        if pg_dbname == '' or pg_dbname is None:
+            print("POSTGRES_DB environment variable not set.")
+            pg_dbname = 'postgres'
+        pg_user = os.getenv('POSTGRES_USER')
+        if pg_user == '' or pg_user is None:
+            print("POSTGRES_USER environment variable not set.")
+            pg_user = 'postgres'
+        pg_password = os.getenv('POSTGRES_PASSWORD')
+        if pg_password == '' or pg_password is None:
+            print("POSTGRES_PASSWORD environment variable not set.")
+            pg_password = 'postgres'
+        pg_host = os.getenv("POSTGRES_HOST")
+        if pg_host == '' or pg_host is None:
+            print("POSTGRES_HOST environment variable is not set.")
+            do_dal_init = False
+            print("Skipping dal init")
+        pg_port = os.getenv("POSTGRES_PORT")
+        if pg_port == '' or pg_port is None:
+            print("POSTGRES_PORT environment variable is not set.")
+            pg_port = '5432'
         if do_dal_init:
-            print(os.getenv('POSTGRES_HOST')=='127.0.0.1')
             dal = db_helper.DataAccessLayer(
-                dbname = os.getenv('POSTGRES_DB'),
-                user = os.getenv('POSTGRES_USER'),
-                password = os.getenv('POSTGRES_PASSWORD'),
-                host = os.getenv('POSTGRES_HOST'),
-                #host = '192.168.254.28',
-                #host = 'http://127.0.0.1',
-                port = os.getenv('POSTGRES_PORT'),
+                dbname = pg_dbname,
+                user = pg_user,
+                password = pg_password,
+                host = pg_host,
+                port = pg_port
             )
+        # init ioc
         ioc = None
 
         flask_thread = threading.Thread(target=app.run, args=(flask_host, flask_port))
@@ -264,8 +272,8 @@ if __name__ == "__main__":
         print("Error: DESCRIPTION_FILE environment variable not set.")
         sys.exit(1)
     # start server
-    if os.getenv('API_PORT') != '':
-        start_api_server(description_file, flask_host='0.0.0.0', flask_port=os.getenv('API_PORT'))
+    if os.getenv('BACKEND_PORT') != '':
+        start_api_server(description_file, flask_host='0.0.0.0', flask_port=os.getenv('BACKEND_PORT'))
     else:
-        print("API_PORT environment variable not set. Using default port")
+        print("BACKEND_PORT environment variable not set. Using default port")
         start_api_server(description_file, flask_host='0.0.0.0')
