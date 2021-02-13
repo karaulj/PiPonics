@@ -10,17 +10,19 @@ KEY_TYPE = "type"
 KEY_SYSTEM = "system"
 KEY_SYSTEMS = "systems"
 
+KEY_TANK_OR_CROP = "tank_or_crop"
+
 KEY_TANK = "tank"
 KEY_TANKS = "tanks"
 
 KEY_CROP = "crop"
 KEY_CROPS = "crops"
 
-KEY_SENSOR = "sensor"
+#KEY_SENSOR = "sensor"
 KEY_SENSORS = "sensors"
 KEY_SENSORS_UNITS = "units"
 
-KEY_ACTUATOR = "actuator"
+#KEY_ACTUATOR = "actuator"
 KEY_ACTUATORS = "actuators"
 KEY_ACTUATORS_MAIN = "main"
 

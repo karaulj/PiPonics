@@ -51,7 +51,7 @@ class Test_generate_entity_contents(unittest.TestCase):
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SYSTEM])
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM])
 
-        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK])
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_NAME], actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK_OR_CROP])
 
     def test_1system_1crop_emptysensor(self):
         json_file = '/data/1system_1crop_emptysensor.json'
@@ -105,11 +105,11 @@ class Test_generate_entity_contents(unittest.TestCase):
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_UUID]))
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TYPE], "DO")
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM], "mainsys")
-        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK], "fishtank1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_TANK_OR_CROP], "fishtank1")
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]))
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_TYPE], "bubbler")
         self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_SYSTEM], "mainsys")
-        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_TANK], "fishtank1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_TANK_OR_CROP], "fishtank1")
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][0][ch.KEY_TANKS][0][ch.KEY_ACTUATORS][0][ch.KEY_UUID]))
 
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_TANKS], [])
@@ -121,11 +121,11 @@ class Test_generate_entity_contents(unittest.TestCase):
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_UUID]))
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_TYPE], "temp")
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_SYSTEM], "backupsys")
-        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_CROP], "growbed1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_TANK_OR_CROP], "growbed1")
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]))
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_TYPE], "biofilter")
         self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_SYSTEM], "backupsys")
-        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_CROP], "growbed1")
+        self.assertEqual(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_TANK_OR_CROP], "growbed1")
         self.assertTrue(is_valid_uuid(actual[ch.KEY_SYSTEMS][1][ch.KEY_CROPS][0][ch.KEY_ACTUATORS][0][ch.KEY_UUID]))
 
     def test_emptysystem(self):
