@@ -37,6 +37,7 @@ services:
       - ./utils/${CONFIG_UTILS_PY_FILE}:/home/${CONFIG_UTILS_PY_FILE}
       - ./utils/${ENTITY_UTILS_PY_FILE}:/home/${ENTITY_UTILS_PY_FILE}
       - ./utils/${HTTP_UTILS_PY_FILE}:/home/${HTTP_UTILS_PY_FILE}
+      - ./utils/${DB_UTILS_PY_FILE}:/home/${DB_UTILS_PY_FILE}
       - ./init/config/description_gen.py:/home/description_gen.py
       - ./test/data:/data
       - ./test/backend_test.py:/home/backend_test.py

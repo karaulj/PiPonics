@@ -7,6 +7,9 @@ WORKDIR /home
 # create common dir
 RUN mkdir /common
 
+# create db socket dir
+RUN mkdir /db
+
 # move app files
 COPY main.py /home/main.py
 COPY db_helper.py /home/db_helper.py

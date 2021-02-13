@@ -37,51 +37,51 @@ services:
       CONFIG_UTILS_PY_FILE: ${CONFIG_UTILS_PY_FILE}
       DESCRIPTION_FILE: ${DESCRIPTION_FILE}
 
-  db:
-    image: postgres:13.1
-    restart: always
-    depends_on:
-      - db-init
-    volumes:
-      - sql:/docker-entrypoint-initdb.d
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:${POSTGRES_PORT}"
+  # db:
+  #   hostname: ${POSTGRES_HOST}
+  #   image: postgres:13.1
+  #   restart: always
+  #   depends_on:
+  #     - db-init
+  #   volumes:
+  #     - sql:/docker-entrypoint-initdb.d
+  #   environment:
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   ports:
+  #     - "5432:${POSTGRES_PORT}"
     #command: /bin/sh -c "while [ ! -f /docker-entrypoint-initdb.d/${DB_INIT_FILE} ]; do echo 'waiting for db init script...'; sleep 1; done;"
     #command: /bin/sh -c "while [ ! -f /docker-entrypoint-initdb.d/${DB_INIT_FILE} ]; do echo 'waiting for db init script...'; sleep 1; done;" && postgres
     #command: sudo -u postgres postgres
     #command: "/bin/sh -c echo 'waiting for db init script...'; sleep 1; && postgres"
     #command: /bin/sh -c "echo 'hello world'"
 
-  backend:
-    build:
-      context: ./backend-server-flask
-      dockerfile: Dockerfile
-    depends_on:
-      - config-init
-      - db-init
-      - db
-    volumes:
-      - ./utils/${CONFIG_UTILS_PY_FILE}:/home/${CONFIG_UTILS_PY_FILE}
-      - ./utils/${ENTITY_UTILS_PY_FILE}:/home/${ENTITY_UTILS_PY_FILE}
-      - ./utils/${HTTP_UTILS_PY_FILE}:/home/${HTTP_UTILS_PY_FILE}
-      - common:/common
-    environment:
-      CONFIG_UTILS_PY_FILE: ${CONFIG_UTILS_PY_FILE}
-      ENTITY_UTILS_PY_FILE: ${ENTITY_UTILS_PY_FILE}
-      HTTP_UTILS_PY_FILE: ${HTTP_UTILS_PY_FILE}
-      DESCRIPTION_FILE: ${DESCRIPTION_FILE}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      API_PORT: ${API_PORT}
-    ports:
-      - "${API_PORT}:${API_PORT}"
+  # backend:
+  #   hostname: ${BACKEND_HOSTNAME}
+  #   build:
+  #     context: ./backend-server-flask
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - config-init
+  #     - db-init
+  #     - db
+  #   volumes:
+  #     - ./utils/${CONFIG_UTILS_PY_FILE}:/home/${CONFIG_UTILS_PY_FILE}
+  #     - ./utils/${ENTITY_UTILS_PY_FILE}:/home/${ENTITY_UTILS_PY_FILE}
+  #     - ./utils/${HTTP_UTILS_PY_FILE}:/home/${HTTP_UTILS_PY_FILE}
+  #     - ./utils/${DB_UTILS_PY_FILE}:/home/${DB_UTILS_PY_FILE}
+  #     - common:/common
+  #   environment:
+  #     DESCRIPTION_FILE: ${DESCRIPTION_FILE}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #     POSTGRES_HOST: ${POSTGRES_HOST}
+  #     POSTGRES_PORT: ${POSTGRES_PORT}
+  #     BACKEND_PORT: ${BACKEND_PORT}
+  #   ports:
+  #     - "${BACKEND_PORT}:${BACKEND_PORT}"
 
   # frontend:
   #   build: './frontend-server-angular'
