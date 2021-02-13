@@ -89,7 +89,7 @@ def generate_entity_contents(json_data:dict) -> dict:
                     # add system name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
-                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][container_type_singular] = container_name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_TANK_OR_CROP] = container_name
 
                 # find sensors
                 try:
@@ -118,7 +118,7 @@ def generate_entity_contents(json_data:dict) -> dict:
                     # add system name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
-                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][container_type_singular] = container_name
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_TANK_OR_CROP] = container_name
 
                 # delete empty sensors from list (if any)
                 all_sensors = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS]
