@@ -11,6 +11,10 @@ SENSOR_ITEM_SCHEMA = {
     ch.KEY_SENSORS_UNITS: False
 }
 
+SENSOR_PRIMARY_KEY_COL_NAME = "entry_id"
+SENSOR_TIMESTAMP_COL_NAME = "time"
+SENSOR_READING_COL_NAME = "value"
+
 
 """ START SQL QUERY HELPER FUNCTIONS """
 def get_sql_schema_create_str(schema_name:str) -> str:
@@ -44,3 +48,12 @@ def is_sensor_item(sensor_item:dict):
             except KeyError:
                 return False
     return True
+
+
+def get_datetime_from_iso8601_str(date_string:str):
+    from dateutil.parser import isoparse
+    try:
+        return isoparse(date_string)
+    except:
+        return None
+    return None

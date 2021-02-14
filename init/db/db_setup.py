@@ -155,9 +155,9 @@ def generate_db_tables_str(json_data:dict) -> str:
                     print("Found sensor: '{}'".format(sensor_name))
 
                     columns = []
-                    columns.append("entry_id SERIAL PRIMARY KEY")
-                    columns.append("timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP")
-                    columns.append("reading {} NOT NULL".format(sensor_datatype))
+                    columns.append("{} SERIAL PRIMARY KEY".format(dbu.SENSOR_PRIMARY_KEY_COL_NAME))
+                    columns.append("{} timestamptz DEFAULT LOCALTIMESTAMP".format(dbu.SENSOR_TIMESTAMP_COL_NAME))
+                    columns.append("{} {} NOT NULL".format(dbu.SENSOR_READING_COL_NAME, sensor_datatype))
                     sensor_tablename = dbu.get_sensor_tablename(sys_name, container_name, sensor_name)
                     f_contents.append(dbu.get_sql_table_create_str(sensor_tablename, columns))
 
