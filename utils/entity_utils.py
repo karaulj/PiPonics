@@ -162,7 +162,7 @@ class StaticEntityManger:
                     sensors = tank[ch.KEY_SENSORS]
                     for sensor in sensors:
                         if sensor[ch.KEY_UUID] == sensor_uuid:
-                            return json.dumps(sensor)
+                            return sensor
         except KeyError:
             pass
         except:
@@ -175,7 +175,7 @@ class StaticEntityManger:
                     sensors = crop[ch.KEY_SENSORS]
                     for sensor in sensors:
                         if sensor[ch.KEY_UUID] == sensor_uuid:
-                            return json.dumps(sensor)
+                            return sensor
             return ERR_ENTITY_NOT_EXISTS
         except KeyError:
             return ERR_ENTITY_NOT_EXISTS
