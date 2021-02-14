@@ -11,7 +11,8 @@ from http_utils import (
     HTTPHeaders, HTTPHeaderValues
 )
 import entity_utils as eu
-import db_helper
+import db_utils as dbu
+import db_helper as dbh
 
 sem = None          # Static Entity Manager object
 dal = None          # Data Access Layer object
@@ -201,9 +202,44 @@ def get_all_sensors():
     for header, header_val in headers.items():
         response.headers[header] = header_val
     return response
+@app.route('/sensor/data', methods=["GET"])
+def get_sensor_data():
+    # get parameters
+    sensor_uuid = request.args.get(HTTPHeaders.API_UUID)
+    if sensor_uuid is None:
+        return_val = eu.ERR_MISSING_PARAM
+    else:
+        sensor_item = sem.get_sensor_item_from_uuid(sensor_uuid)
+        start_time = request.args.get(HTTPHeaders.API_START_TIME)
+        end_time = request.args.get(HTTPHeaders.API_END_TIME)
+        return_val = dal.get_sensor_data(sensor_item, start_time, end_time)
+    # set response
+    headers = {}
+    if return_val == eu.ERR_MISSING_PARAM:
+        return_val = eu.ERR_MISSING_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == dbh.ERR_BAD_SENSOR_PARAM:
+        return_val = dbh.ERR_BAD_SENSOR_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == dbh.ERR_BAD_START_TIME_PARAM:
+        return_val = dbh.ERR_BAD_START_TIME_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == dbh.ERR_BAD_END_TIME_PARAM:
+        return_val = dbh.ERR_BAD_END_TIME_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    else:
+        status = HTTPStatus.OK
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.APPLICATION_JSON
+    response = make_response(return_val, status)
+    for header, header_val in headers.items():
+        response.headers[header] = header_val
+    return response
 
-
-def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_port:str='5000'):
+def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:bool=True, flask_host:str='127.0.0.1', flask_port:str='5000'):
     flask_thread = None
     stop_thr_event = None
     uart_rx_thread = None
@@ -212,34 +248,38 @@ def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_por
         global dal
         global ioc
         # init sem
-        if description_file is not None:
-            print("Warning: No description file provided.")
+        if do_sem_init:
+            description_file = os.getenv('DESCRIPTION_FILE')
+            if description_file == '' or description_file is None:
+                print("Error: DESCRIPTION_FILE environment variable not set.")
+                sys.exit(1)
+            else:
+                description_file = "/common/{}".format(description_file)
             sem = eu.StaticEntityManger(description_file)
         # init dal
-        do_dal_init = True
-        pg_dbname = os.getenv('POSTGRES_DB')
-        if pg_dbname == '' or pg_dbname is None:
-            print("POSTGRES_DB environment variable not set.")
-            pg_dbname = 'postgres'
-        pg_user = os.getenv('POSTGRES_USER')
-        if pg_user == '' or pg_user is None:
-            print("POSTGRES_USER environment variable not set.")
-            pg_user = 'postgres'
-        pg_password = os.getenv('POSTGRES_PASSWORD')
-        if pg_password == '' or pg_password is None:
-            print("POSTGRES_PASSWORD environment variable not set.")
-            pg_password = 'postgres'
-        pg_host = os.getenv("POSTGRES_HOST")
-        if pg_host == '' or pg_host is None:
-            print("POSTGRES_HOST environment variable is not set.")
-            do_dal_init = False
-            print("Skipping dal init")
-        pg_port = os.getenv("POSTGRES_PORT")
-        if pg_port == '' or pg_port is None:
-            print("POSTGRES_PORT environment variable is not set.")
-            pg_port = '5432'
         if do_dal_init:
-            dal = db_helper.DataAccessLayer(
+            pg_dbname = os.getenv('POSTGRES_DB')
+            if pg_dbname == '' or pg_dbname is None:
+                print("POSTGRES_DB environment variable not set.")
+                pg_dbname = 'postgres'
+            pg_user = os.getenv('POSTGRES_USER')
+            if pg_user == '' or pg_user is None:
+                print("POSTGRES_USER environment variable not set.")
+                pg_user = 'postgres'
+            pg_password = os.getenv('POSTGRES_PASSWORD')
+            if pg_password == '' or pg_password is None:
+                print("POSTGRES_PASSWORD environment variable not set.")
+                pg_password = 'postgres'
+            pg_host = os.getenv("POSTGRES_HOST")
+            if pg_host == '' or pg_host is None:
+                print("POSTGRES_HOST environment variable is not set.")
+                pg_host = '127.0.0.1'
+                print("Skipping dal init")
+            pg_port = os.getenv("POSTGRES_PORT")
+            if pg_port == '' or pg_port is None:
+                print("POSTGRES_PORT environment variable is not set.")
+                pg_port = '5432'
+            dal = dbh.DataAccessLayer(
                 dbname = pg_dbname,
                 user = pg_user,
                 password = pg_password,
@@ -247,7 +287,8 @@ def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_por
                 port = pg_port
             )
         # init ioc
-        ioc = None
+        if do_ioc_init:
+            ioc = None
 
         flask_thread = threading.Thread(target=app.run, args=(flask_host, flask_port))
         flask_thread.start()
@@ -259,21 +300,17 @@ def start_api_server(description_file:str, flask_host:str='127.0.0.1', flask_por
     except:
         print("An error occurred while trying to start the backend API server.")
         if uart_rx_thread is not None and stop_thr_event is not None:
-            # stop uart rx thread 'peacefully'
             stop_thr_event.set()
+        if dal is not None:
+            dal.shutdown()
         raise
 
 
 if __name__ == "__main__":
     #os.listdir('/home')
-    if os.getenv('DESCRIPTION_FILE') != '':
-        description_file = "/common/{}".format(os.getenv('DESCRIPTION_FILE'))
-    else:
-        print("Error: DESCRIPTION_FILE environment variable not set.")
-        sys.exit(1)
     # start server
-    if os.getenv('BACKEND_PORT') != '':
-        start_api_server(description_file, flask_host='0.0.0.0', flask_port=os.getenv('BACKEND_PORT'))
+    if os.getenv('BACKEND_PORT') != '' and os.getenv('BACKEND_PORT') is not None:
+        start_api_server(flask_host='0.0.0.0', flask_port=os.getenv('BACKEND_PORT'))
     else:
         print("BACKEND_PORT environment variable not set. Using default port")
-        start_api_server(description_file, flask_host='0.0.0.0')
+        start_api_server(flask_host='0.0.0.0')
