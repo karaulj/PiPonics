@@ -4,6 +4,7 @@ import json
 
 import db_setup
 import config_utils as ch
+import db_utils as dbu
 
 
 class Test_generate_metadata_sensor_table_str(unittest.TestCase):
@@ -84,10 +85,10 @@ class Test_generate_db_tables_str(unittest.TestCase):
 
         create_table_str = """
 CREATE TABLE IF NOT EXISTS sys1.tank1_pH (
-  entry_id SERIAL PRIMARY KEY,
-  timestamp timestamp without time zone DEFAULT LOCALTIMESTAMP,
-  reading SMALLINT NOT NULL
-);"""
+  {} SERIAL PRIMARY KEY,
+  {} timestamp DEFAULT LOCALTIMESTAMP,
+  {} SMALLINT NOT NULL
+);""".format(dbu.SENSOR_PRIMARY_KEY_COL_NAME, dbu.SENSOR_TIMESTAMP_COL_NAME, dbu.SENSOR_READING_COL_NAME)
         self.assertIn(create_table_str, actual)
 
     def test_2system_full(self):

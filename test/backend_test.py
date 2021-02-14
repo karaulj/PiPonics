@@ -31,7 +31,9 @@ class Test_api_methods(unittest.TestCase):
     def setUp(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
-        self.desc_file = '/home/test_description.json'
+        self.desc_file_env = 'test_description.json'
+        os.environ['DESCRIPTION_FILE'] = self.desc_file_env
+        self.desc_file = '/common/{}'.format(self.desc_file_env)
         self.api_port = str(random.randint(49152, 65534))
         self.base_url = 'http://127.0.0.1:{}'.format(self.api_port)
     def tearDown(self):
@@ -41,7 +43,7 @@ class Test_api_methods(unittest.TestCase):
     def _start_server(self):
         self.api_port = str(random.randint(49152, 65534))
         self.base_url = 'http://127.0.0.1:{}'.format(self.api_port)
-        main.start_api_server(self.desc_file, flask_port=self.api_port)
+        main.start_api_server(do_sem_init=True, do_dal_init=False, do_ioc_init=False, flask_port=self.api_port)
         num_retries = 0
 
         connected = False
