@@ -1,6 +1,6 @@
 import os, sys
+import logging
 import json
-
 
 KEY_UUID = "uuid"
 KEY_NAME = "name"
@@ -38,24 +38,35 @@ CONTAINER_TYPES = {
     KEY_CROPS: KEY_CROP
 }
 
+# init logging
+logger = logging.getLogger(__name__)
 
-def get_json_file_contents(json_file:str, print_func=print) -> dict:
+s_handler = logging.StreamHandler()
+s_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+s_handler.setFormatter(formatter)
+
+logger.addHandler(s_handler)
+logger.setLevel(logging.DEBUG)
+
+
+def get_json_file_contents(json_file:str) -> dict:
     try:
         with open(json_file, 'r') as f:
             entity_data = json.load(f)
-        print_func("File '{}' parsed successfully".format(json_file))
+        logger.debug("File '{}' parsed successfully".format(json_file))
         return entity_data
     except IsADirectoryError:
-        print_func("Error: '{}' is a directory. Ensure env var is set, if any.".format(description_file))
+        logger.exception("'{}' is a directory. Ensure env var is set, if any.".format(description_file))
         raise
     except IOError:
-        print_func("Error: File '{}' not found.".format(json_file))
+        logger.exception("File '{}' not found.".format(json_file))
         raise
     except json.decoder.JSONDecodeError:
-        print_func("Error: Could not decode json document at '{}'.".format(json_file))
+        logger.exception("Could not decode json document at '{}'.".format(json_file))
         raise
-    except:
-        print_func("Error: Unknown exception occured.")
+    except Exception as e:
+        logger.exception("Unknown exception occured.")
         raise
     return None
 

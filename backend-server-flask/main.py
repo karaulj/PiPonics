@@ -1,4 +1,5 @@
 import sys, os
+import logging
 import json
 import threading
 from flask import (
@@ -8,12 +9,13 @@ from http import (
     HTTPStatus
 )
 from http_utils import (
-    HTTPHeaders, HTTPHeaderValues
+    HTTPHeaders, HTTPHeaderValues, APIParams
 )
 import entity_utils as eu
 import db_utils as dbu
 import db_helper as dbh
 
+logger = logging.getLogger(__name__)
 sem = None          # Static Entity Manager object
 dal = None          # Data Access Layer object
 ioc = None          # IO Controller object
@@ -64,7 +66,7 @@ def get_all_systems():
 @app.route('/tank/all', methods=["GET"])
 def get_all_tanks():
     # get parameters
-    system_uuid = request.args.get(HTTPHeaders.API_UUID)
+    system_uuid = request.args.get(APIParams.UUID)
     if system_uuid is None:
         return_val = eu.ERR_MISSING_PARAM
     else:
@@ -100,7 +102,7 @@ def get_all_tanks():
 @app.route('/crop/all', methods=["GET"])
 def get_all_crops():
     # get parameters
-    system_uuid = request.args.get(HTTPHeaders.API_UUID)
+    system_uuid = request.args.get(APIParams.UUID)
     if system_uuid is None:
         return_val = eu.ERR_MISSING_PARAM
     else:
@@ -136,7 +138,7 @@ def get_all_crops():
 @app.route('/actuator/all', methods=["GET"])
 def get_all_actuators():
     # get parameters
-    tank_or_crop_uuid = request.args.get(HTTPHeaders.API_UUID)
+    tank_or_crop_uuid = request.args.get(APIParams.UUID)
     if tank_or_crop_uuid is None:
         return_val = eu.ERR_MISSING_PARAM
     else:
@@ -172,7 +174,7 @@ def get_all_actuators():
 @app.route('/sensor/all', methods=["GET"])
 def get_all_sensors():
     # get parameters
-    tank_or_crop_uuid = request.args.get(HTTPHeaders.API_UUID)
+    tank_or_crop_uuid = request.args.get(APIParams.UUID)
     if tank_or_crop_uuid is None:
         return_val = eu.ERR_MISSING_PARAM
     else:
@@ -205,19 +207,30 @@ def get_all_sensors():
 @app.route('/sensor/data', methods=["GET"])
 def get_sensor_data():
     # get parameters
-    sensor_uuid = request.args.get(HTTPHeaders.API_UUID)
+    sensor_uuid = request.args.get(APIParams.UUID)
     if sensor_uuid is None:
         return_val = eu.ERR_MISSING_PARAM
     else:
         sensor_item = sem.get_sensor_item_from_uuid(sensor_uuid)
-        start_time = request.args.get(HTTPHeaders.API_START_TIME)
-        end_time = request.args.get(HTTPHeaders.API_END_TIME)
-        return_val = dal.get_sensor_data(sensor_item, start_time, end_time)
+        start_time = request.args.get(APIParams.START_TIME) # assume None is default
+        end_time = request.args.get(APIParams.END_TIME)     # assume None is default
+        try:
+            return_val = dal.get_sensor_data(sensor_item, start_time, end_time)
+        except AttributeError:
+            if dal is None:
+                app.logger.error('DAL has not been initialized.')
+                return_val = dbh.ERR_DAL_NOT_INITIALIZED
+            else:
+                raise
     # set response
     headers = {}
     if return_val == eu.ERR_MISSING_PARAM:
         return_val = eu.ERR_MISSING_PARAM_MSG
         status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == dbh.ERR_DAL_NOT_INITIALIZED:
+        return_val = dbh.ERR_DAL_NOT_INITIALIZED_MSG
+        status = HTTPStatus.INTERNAL_SERVER_ERROR
         headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
     elif return_val == dbh.ERR_BAD_SENSOR_PARAM:
         return_val = dbh.ERR_BAD_SENSOR_PARAM_MSG
@@ -238,6 +251,7 @@ def get_sensor_data():
     for header, header_val in headers.items():
         response.headers[header] = header_val
     return response
+
 
 def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:bool=True, flask_host:str='127.0.0.1', flask_port:str='5000'):
     flask_thread = None
@@ -306,11 +320,29 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
         raise
 
 
+def _init_logging():
+    formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+
+    s_handler = logging.StreamHandler()
+    s_handler.setLevel(logging.DEBUG)
+    s_handler.setFormatter(formatter)
+
+    global logger
+    logger.addHandler(s_handler)
+    logger.setLevel(logging.DEBUG)
+    logger.debug('Finished logger setup for main')
+
+    app.logger.addHandler(s_handler)
+    app.logger.setLevel(logging.INFO)
+
+
 if __name__ == "__main__":
     #os.listdir('/home')
+    _init_logging()
     # start server
-    if os.getenv('BACKEND_PORT') != '' and os.getenv('BACKEND_PORT') is not None:
-        start_api_server(flask_host='0.0.0.0', flask_port=os.getenv('BACKEND_PORT'))
+    backend_port = os.getenv('BACKEND_PORT')
+    if backend_port != '' and backend_port is not None:
+        start_api_server(flask_host='0.0.0.0', flask_port=backend_port)
     else:
         print("BACKEND_PORT environment variable not set. Using default port")
         start_api_server(flask_host='0.0.0.0')

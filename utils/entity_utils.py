@@ -1,4 +1,6 @@
 import json
+import logging
+
 import config_utils as ch
 
 ERR_UNKNOWN = 0
@@ -14,8 +16,20 @@ ERR_MISSING_PARAM_MSG = "The request is missing a required parameter."
 class StaticEntityManger:
 
     def __init__(self, entity_file):
+        self._logger = self._init_logging()
         self._file = entity_file
         self._data = self._get_entity_data()
+
+    def _init_logging(self):
+        logger = logging.getLogger(__name__)
+        s_handler = logging.StreamHandler()
+        s_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+        s_handler.setFormatter(formatter)
+
+        logger.addHandler(s_handler)
+        logger.setLevel(logging.DEBUG)
+        return logger
 
     def _get_entity_data(self):
         return ch.get_json_file_contents(self._file)

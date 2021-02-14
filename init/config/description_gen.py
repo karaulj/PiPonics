@@ -1,8 +1,12 @@
-import os
-import sys
+import os, sys
+import logging
 import json
 import uuid
+
 import config_utils as ch
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_uuid(all_uuids:list):
@@ -25,7 +29,7 @@ def generate_entity_contents(json_data:dict) -> dict:
     try:
         systems = json_data[ch.KEY_SYSTEMS]
     except KeyError:
-        print("No '{}' property found in config file".format(ch.KEY_SYSTEMS))
+        logger.warning("No '{}' property found in config file".format(ch.KEY_SYSTEMS))
         systems = []
 
     all_uuids = []
@@ -38,7 +42,7 @@ def generate_entity_contents(json_data:dict) -> dict:
         except KeyError:
             sys_name = ch.get_default_system_name(i+1)
         entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_NAME] = sys_name
-        print("Found system: '{}'".format(sys_name))
+        logger.debug("Found system: '{}'".format(sys_name))
         # add uuid for system
         all_uuids, sys_uuid = generate_uuid(all_uuids)
         entity_lookup[ch.KEY_SYSTEMS][i][ch.KEY_UUID] = sys_uuid
@@ -48,7 +52,7 @@ def generate_entity_contents(json_data:dict) -> dict:
             try:
                 containers = system[container_type]
             except KeyError:
-                print("No '{}' property found for system '{}'".format(container_type, i+1))
+                logger.warning("No '{}' property found for system '{}'".format(container_type, i+1))
                 containers = []
             entity_lookup[ch.KEY_SYSTEMS][i][container_type] = containers
 
@@ -60,7 +64,7 @@ def generate_entity_contents(json_data:dict) -> dict:
                 except KeyError:
                     container_name = ch.get_default_container_name(container_type, j+1)
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_NAME] = container_name
-                print("Found container: '{}'".format(container_name))
+                logger.debug("Found container: '{}'".format(container_name))
                 # add uuid for container
                 all_uuids, container_uuid = generate_uuid(all_uuids)
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_UUID] = container_uuid
@@ -71,17 +75,17 @@ def generate_entity_contents(json_data:dict) -> dict:
                 try:
                     actuators = container[ch.KEY_ACTUATORS]
                 except KeyError:
-                    print("No '{}' property found for container '{}'".format(ch.KEY_ACTUATORS, j+1))
+                    logger.warning("No '{}' property found for container '{}'".format(ch.KEY_ACTUATORS, j+1))
                     actuators = []
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS] = actuators
                 # iterate through actuators
                 for k, actuator in enumerate(actuators):
-                    print("Found actuator #{}".format(k+1))
+                    logger.debug("Found actuator #{}".format(k+1))
                     # get actuator type
                     try:
                         actuator[ch.KEY_TYPE]
                     except KeyError:
-                        print("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
+                        logger.warning("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
                     # add uuid for actuator
                     all_uuids, actuator_uuid = generate_uuid(all_uuids)
@@ -95,17 +99,17 @@ def generate_entity_contents(json_data:dict) -> dict:
                 try:
                     sensors = container[ch.KEY_SENSORS]
                 except KeyError:
-                    print("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, j+1))
+                    logger.warning("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, j+1))
                     sensors = []
                 entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS] = sensors
                 # iterate through sensors in container
                 for k, sensor in enumerate(sensors):
-                    print("Found sensor #{}".format(k+1))
+                    logger.debug("Found sensor #{}".format(k+1))
                     # get sensor type
                     try:
                         sensor_type = sensor[ch.KEY_TYPE].replace('/', '')
                     except KeyError:
-                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
+                        logger.warning("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
                     # add uuid for sensor
                     all_uuids, sensor_uuid = generate_uuid(all_uuids)
@@ -139,7 +143,7 @@ def generate_description_file(config_file:str, output_file:str=None) -> int:
     """
     json_contents = ch.get_json_file_contents(config_file)
     if json_contents is None:
-        print("Internal Error: Config file json data is null. Exiting")
+        logger.error("Internal Config file json data is null. Exiting")
         sys.exit(1)
 
     entity_lookup = generate_entity_contents(json_contents)
@@ -147,28 +151,39 @@ def generate_description_file(config_file:str, output_file:str=None) -> int:
     if output_file is not None:
         with open(output_file, 'w') as f:
             f.write(json.dumps(entity_lookup, indent=2))
-        print("Wrote description file to '{}'".format(output_file))
+        logger.info("Wrote description file to '{}'".format(output_file))
 
     return 0
 
 
+def _init_logging():
+    s_handler = logging.StreamHandler()
+    s_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+    s_handler.setFormatter(formatter)
+
+    logger.addHandler(s_handler)
+    logger.setLevel(logging.DEBUG)
+
+
 if __name__ == "__main__":
-    print("Starting description file generation")
+    _init_logging
+    logger.info("Starting description file generation")
 
     # get config file
     if os.getenv('CONFIG_FILE') != '':
         config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
     else:
-        print("Error: CONFIG_FILE environment variable is not set.")
+        logger.error("CONFIG_FILE environment variable is not set.")
         sys.exit(1)
     # get description file
     if os.getenv('DESCRIPTION_FILE') != '':
         output_file = '/common/{}'.format(os.getenv('DESCRIPTION_FILE'))
     else:
-        print("Warning: DESCRIPTION_FILE environment variable is not set.")
+        logger.warning("DESCRIPTION_FILE environment variable is not set.")
         output_file = None
 
     # run main program
     generate_description_file(config_file, output_file=output_file)
-    print("description file generation finished successfully")
+    logger.info("description file generation finished successfully")
     sys.exit(0)

@@ -1,11 +1,14 @@
 import time
 from datetime import datetime
+import logging
+import json
 
 import psycopg2
 from psycopg2 import pool
 
 import config_utils as ch
 import db_utils as dbu
+from http_utils import APIParams
 
 
 ERR_BAD_SENSOR_PARAM = 100
@@ -16,11 +19,14 @@ ERR_BAD_END_TIME_PARAM = 98
 ERR_BAD_END_TIME_PARAM_MSG = "The provided end time is missing or invalid."
 ERR_START_AFTER_END = 97
 ERR_START_AFTER_END_MSG = "The provided start time must be equal to or less than end time."
+ERR_DAL_NOT_INITIALIZED = 96
+ERR_DAL_NOT_INITIALIZED_MSG = "No database connection was found."
 
 
 class DataAccessLayer(object):
 
     def __init__(self, dbname, user, password, host, port, minconn=0, maxconn=4):
+        self._logger = self._init_logging()
         self._dbname = dbname
         self._user = user
         self._password = password
@@ -31,26 +37,32 @@ class DataAccessLayer(object):
         #self.conn = self._connect()
         self._conn_pool = self._get_conn_pool()
         self.sensor_cols = [dbu.SENSOR_TIMESTAMP_COL_NAME, dbu.SENSOR_READING_COL_NAME]
-        self.time_row_idx = self._get_time_row_idx()
+        self.time_row_idx = 0
+        self.val_row_idx = 1
 
-    def _get_time_row_idx(self):
-        for idx, col_name in enumerate(self.sensor_cols):
-            if col_name == dbu.SENSOR_TIMESTAMP_COL_NAME:
-                return idx
-        raise Exception("No timestamp row found in sensor column list.")
+    def _init_logging(self):
+        logger = logging.getLogger(__name__)
+        s_handler = logging.StreamHandler()
+        s_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+        s_handler.setFormatter(formatter)
+
+        logger.addHandler(s_handler)
+        logger.setLevel(logging.DEBUG)
+        return logger
 
     def get_conn(self):
         num_retries = 0
         while num_retries < 10:
             try:
                 conn = self._conn_pool.getconn()
-                print("Connected to db successfully")
+                self._logger.debug("Successfully got db connection")
                 return conn
             except psycopg2.OperationalError:
-                print("Connection to db failed. Attempting reconnect...")
+                self._logger.warning("Connection to db failed. Attempting reconnect...")
                 time.sleep(1)
                 num_retries += 1
-        raise Exception("Could not connect to PostgreSQL server at '{}', port '{}'".format(self._host, self._port))
+        self._logger.error("Could not get connection at '{}', port '{}'".format(self._host, self._port))
 
     def put_conn(self, conn):
         self._conn_pool.putconn(conn)
@@ -68,13 +80,13 @@ class DataAccessLayer(object):
                     host = self._host,
                     port = self._port
                 )
-                print("Connected to db successfully")
+                self._logger.debug("Started db connection pool")
                 return conn_pool
             except psycopg2.OperationalError:
-                print("Connection to db failed. Attempting reconnect...")
+                self._logger.warning("Connection to db failed. Attempting reconnect...")
                 time.sleep(1)
                 num_retries += 1
-        raise Exception("Could not connect to PostgreSQL server at '{}', port '{}'".format(self._host, self._port))
+        self._logger.error("Could not start connection pool at '{}', port '{}'".format(self._host, self._port))
 
     def _get_tablename_from_sensor_item(self, sensor_item:dict):
         if not dbu.is_sensor_item(sensor_item):
@@ -107,29 +119,32 @@ class DataAccessLayer(object):
         query += ";"
         return query, query_params
 
-    def _get_data_from_results(self, results:list):
+    def _get_sensor_data_from_results(self, results:list):
         new_results = list()
         for row in results:
-            new_row = list(row)
-            # convert datetime to string
-            new_row[self.time_row_idx] = row[self.time_row_idx].isoformat()
+            new_results.append({
+                APIParams.SENSOR_READING_TIME  : row[self.time_row_idx].isoformat(),
+                APIParams.SENSOR_READING_VALUE : row[self.val_row_idx]
+            })
         return new_results
-
 
     def get_sensor_data(self, sensor_item:str, start_time:str, end_time:str):
         # check sensor item param
         sensor_tablename = self._get_tablename_from_sensor_item(sensor_item)
         if sensor_tablename is None:
             return ERR_BAD_SENSOR_PARAM
+        self._logger.debug('Sensor tablename: {}'.format(sensor_tablename))
         # check start time param (None = default)
         start_dt = None
         if start_time is not None:
+            self._logger.debug('Start time param: {}'.format(start_time))
             start_dt = dbu.get_datetime_from_iso8601_str(start_time)
             if start_dt is None:
                 return ERR_BAD_START_TIME_PARAM
         # check end time param (None = default)
         end_dt = None
         if end_time is not None:
+            self._logger.debug('End time param: {}'.format(end_time))
             end_dt = dbu.get_datetime_from_iso8601_str(end_time)
             if end_dt is None:
                 return ERR_BAD_END_TIME_PARAM
@@ -138,18 +153,23 @@ class DataAccessLayer(object):
                 return ERR_START_AFTER_END
         # generate query
         query, query_params = self._get_sensor_data_query(sensor_tablename, start_dt, end_dt)
+        self._logger.debug("Generated query: {}".format(query))
+        self._logger.debug("Generated query params: {}".format(query_params))
         # execute query
         try:
             conn = self.get_conn()
             with conn.cursor() as cur:
-                results = cur.execute(query, query_params)
+                cur.execute(query, query_params)
+                results = cur.fetchall()
             self.put_conn(conn)
-        except:
-            print("Error executing query.")
+            self._logger.debug('Raw query results: {}'.format(results))
+        except Exception as e:
+            self._logger.exception("Could not execute SQL query.")
             raise
         # prep data
-        sensor_data = self._get_data_from_results(results)
-        return sensor_data
+        sensor_data = self._get_sensor_data_from_results(results)
+        self._logger.debug("Final sensor data: {}".format(sensor_data))
+        return json.dumps(sensor_data)
 
     def shutdown(self):
         if self._conn_pool:

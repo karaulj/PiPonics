@@ -1,8 +1,13 @@
 import os
 import sys
 import json
+import logging
+
 import config_utils as ch
 import db_utils as dbu
+
+# init logging
+logger = logging.getLogger(__name__)
 
 
 def generate_metadata_sensor_table_str(json_data:dict) -> str:
@@ -12,20 +17,20 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
     json_data -- json object, root of config file (required)
     """
 
-    print("Beginning metadata sensor table creation")
+    logger.info("Beginning metadata sensor table creation")
 
     # find metadata
     try:
         metadata = json_data[ch.KEY_METADATA]
     except KeyError:
-        print("No '{}' property found in config file".format(ch.KEY_METADATA))
+        logger.error("No '{}' property found in config file".format(ch.KEY_METADATA))
         return ""
 
     # find sensors
     try:
         sensors = metadata[ch.KEY_METADATA_SENSORS]
     except KeyError:
-        print("No '{}' property found for '{}' object in config file".format(ch.KEY_METADATA_SENSORS, ch.KEY_METADATA))
+        logger.error("No '{}' property found for '{}' object in config file".format(ch.KEY_METADATA_SENSORS, ch.KEY_METADATA))
         return ""
 
     f_contents = []
@@ -38,7 +43,7 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
         try:
             sensor_type = "'{}'".format(sensor[ch.KEY_TYPE])
         except KeyError:
-            print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_TYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
+            logger.warning("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_TYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
             continue
         # get sensor units
         try:
@@ -48,13 +53,13 @@ def generate_metadata_sensor_table_str(json_data:dict) -> str:
             else:
                 sensor_units = "'{}'".format(sensor_units)
         except KeyError:
-            print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_UNITS, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
+            logger.warning("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_UNITS, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
             continue
         # get sensor sql data type
         try:
             sensor_sql_data_type = "'{}'".format(sensor[ch.KEY_METADATA_SENSORS_SQL_DATATYPE])
         except KeyError:
-            print("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
+            logger.warning("No '{}' property found for sensor object at '{}', '{}', #{}".format(ch.KEY_METADATA_SENSORS_SQL_DATATYPE, ch.KEY_METADATA, ch.KEY_METADATA_SENSORS, i+1))
             continue
 
         metadata_sensors_tablename = '{}.{}'.format(ch.KEY_METADATA, ch.KEY_METADATA_SENSORS)
@@ -88,7 +93,7 @@ def generate_db_tables_str(json_data:dict) -> str:
     try:
         systems = json_data[ch.KEY_SYSTEMS]
     except KeyError:
-        print("No '{}' property found in config file".format(ch.KEY_SYSTEMS))
+        logger.error("No '{}' property found in config file".format(ch.KEY_SYSTEMS))
         return ""   # return blank string for no sql script created
 
     f_contents = []
@@ -101,7 +106,7 @@ def generate_db_tables_str(json_data:dict) -> str:
             sys_name = system[ch.KEY_NAME].replace('/', '')
         except KeyError:
             sys_name = ch.get_default_system_name(i+1)
-        print("Found system: '{}'".format(sys_name))
+        logger.debug("Found system: '{}'".format(sys_name))
 
         # only create system schema if at least one sensor
         sys_schema_created = False
@@ -111,7 +116,7 @@ def generate_db_tables_str(json_data:dict) -> str:
             try:
                 containers = system[container_type]
             except KeyError:
-                print("No '{}' property found for system '{}'".format(container_type, sys_name))
+                logger.warning("No '{}' property found for system '{}'".format(container_type, sys_name))
                 continue
 
             # iterate through containers in system
@@ -121,13 +126,13 @@ def generate_db_tables_str(json_data:dict) -> str:
                     container_name = "{}".format(container[ch.KEY_NAME].replace('/', ''))
                 except KeyError:
                     container_name = ch.get_default_container_name(container_type, j+1)
-                print("Found container: '{}'".format(container_name))
+                logger.debug("Found container: '{}'".format(container_name))
 
                 # find sensors
                 try:
                     sensors = container[ch.KEY_SENSORS]
                 except KeyError:
-                    print("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, container_name))
+                    logger.warning("No '{}' property found for container '{}'".format(ch.KEY_SENSORS, container_name))
                     continue
 
                 # iterate through sensors in tank
@@ -136,7 +141,7 @@ def generate_db_tables_str(json_data:dict) -> str:
                     try:
                         sensor_type = sensor[ch.KEY_TYPE].replace('/', '')
                     except KeyError:
-                        print("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
+                        logger.warning("No '{}' property found for system '{}', container '{}', sensor #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
                     # get sensor name
                     try:
@@ -152,7 +157,7 @@ def generate_db_tables_str(json_data:dict) -> str:
                     # create table for sensor
                     sensor_datatype = ch.get_sensor_sql_data_type(json_data, sensor_type)
 
-                    print("Found sensor: '{}'".format(sensor_name))
+                    logger.debug("Found sensor: '{}'".format(sensor_name))
 
                     columns = []
                     columns.append("{} SERIAL PRIMARY KEY".format(dbu.SENSOR_PRIMARY_KEY_COL_NAME))
@@ -173,40 +178,51 @@ def main(config_file:str, sql_file:str=None) -> int:
     """
     json_contents = ch.get_json_file_contents(config_file)
     if json_contents is None:
-        print("Internal Error: Config file json data is null. Exiting")
+        logger.error("Config file json data is null. Exiting")
         sys.exit(1)
 
     db_init_tables_str = generate_db_tables_str(json_contents)
     metadata_sensor_table_str = generate_metadata_sensor_table_str(json_contents)
     sql_script_str = db_init_tables_str + metadata_sensor_table_str
 
-    print("\n*** BEGIN FULL SQL SCRIPT ***\n{}\n*** END FULL SQL SCRIPT ***\n".format(sql_script_str))
+    logger.debug("\n*** BEGIN FULL SQL SCRIPT ***\n{}\n*** END FULL SQL SCRIPT ***\n".format(sql_script_str))
 
     if sql_file is not None:
         with open(sql_file, 'w') as f:
             f.write(sql_script_str)
-        print("Wrote db init sql script to '{}'".format(sql_file))
+        logger.info("Wrote db init sql script to '{}'".format(sql_file))
 
     return 0
 
 
+def _init_logging():
+    s_handler = logging.StreamHandler()
+    s_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(asctime)s] %(name)s [%(levelname)s] %(message)s')
+    s_handler.setFormatter(formatter)
+
+    logger.addHandler(s_handler)
+    logger.setLevel(logging.DEBUG)
+
+
 if __name__ == "__main__":
-    print("Starting db init sql script generation")
+    _init_logging()
+    logger.info("Starting db init sql script generation")
 
     # get config file
     if os.getenv('CONFIG_FILE') != '':
         config_file = '/home/{}'.format(os.getenv('CONFIG_FILE'))
     else:
-        print("Error: CONFIG_FILE environment variable is not set.")
+        logger.error("CONFIG_FILE environment variable is not set.")
         sys.exit(1)
     # get sql file
     if os.getenv('DB_INIT_SQL_FILE') != '':
         sql_file = '/sql/{}'.format(os.getenv('DB_INIT_SQL_FILE'))
     else:
-        print("Warning: DB_INIT_SQL_FILE environment variable is not set.")
+        logger.warning("DB_INIT_SQL_FILE environment variable is not set.")
         sql_file = None
 
     # run main program
     main(config_file, sql_file=sql_file)  # write changes to config file
-    print("db init finished successfully")
+    logger.info("db init finished successfully")
     sys.exit(0)

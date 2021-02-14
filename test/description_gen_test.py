@@ -2,6 +2,7 @@ import unittest
 import sys, os
 import json
 import uuid
+import logging
 
 import description_gen
 import config_utils as ch
@@ -21,9 +22,11 @@ class Test_generate_entity_contents(unittest.TestCase):
     def setUp(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
+        logging.disable(logging.CRITICAL)
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+        logging.disable(logging.NOTSET)
 
     def test_empty_file(self):
         json_file = '/data/empty.json'

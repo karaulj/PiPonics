@@ -1,6 +1,7 @@
 import unittest
 import sys, os
 import json
+import logging
 
 import config_utils as ch
 
@@ -10,9 +11,11 @@ class Test_get_json_file_contents(unittest.TestCase):
     def setUp(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
+        logging.disable(logging.CRITICAL)
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+        logging.disable(logging.NOTSET)
 
     def test_no_file(self):
         with self.assertRaises(IOError):

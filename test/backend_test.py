@@ -6,6 +6,7 @@ import random
 from http import (
     HTTPStatus
 )
+import logging
 import requests
 
 import description_gen as dg
@@ -31,6 +32,7 @@ class Test_api_methods(unittest.TestCase):
     def setUp(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
+        logging.disable(logging.CRITICAL)
         self.desc_file_env = 'test_description.json'
         os.environ['DESCRIPTION_FILE'] = self.desc_file_env
         self.desc_file = '/common/{}'.format(self.desc_file_env)
@@ -39,11 +41,12 @@ class Test_api_methods(unittest.TestCase):
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+        logging.disable(logging.NOTSET)
 
-    def _start_server(self):
+    def _start_server(self, dal_init=False):
         self.api_port = str(random.randint(49152, 65534))
         self.base_url = 'http://127.0.0.1:{}'.format(self.api_port)
-        main.start_api_server(do_sem_init=True, do_dal_init=False, do_ioc_init=False, flask_port=self.api_port)
+        main.start_api_server(do_sem_init=True, do_dal_init=dal_init, do_ioc_init=False, flask_port=self.api_port)
         num_retries = 0
 
         connected = False
