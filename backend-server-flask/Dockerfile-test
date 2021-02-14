@@ -7,6 +7,9 @@ WORKDIR /home
 # create dir for holding test config json files
 RUN mkdir /data
 
+# create dir for holding description file
+RUN mkdir /common
+
 # copy python files
 COPY main.py /home/main.py
 COPY db_helper.py /home/db_helper.py
