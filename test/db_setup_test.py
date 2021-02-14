@@ -86,7 +86,7 @@ class Test_generate_db_tables_str(unittest.TestCase):
         create_table_str = """
 CREATE TABLE IF NOT EXISTS sys1.tank1_pH (
   {} SERIAL PRIMARY KEY,
-  {} timestamp DEFAULT LOCALTIMESTAMP,
+  {} timestamptz DEFAULT LOCALTIMESTAMP,
   {} SMALLINT NOT NULL
 );""".format(dbu.SENSOR_PRIMARY_KEY_COL_NAME, dbu.SENSOR_TIMESTAMP_COL_NAME, dbu.SENSOR_READING_COL_NAME)
         self.assertIn(create_table_str, actual)
