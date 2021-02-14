@@ -143,3 +143,40 @@ class StaticEntityManger:
         except KeyError:
             return ERR_ENTITY_NOT_EXISTS
         return None
+    def get_sensor_item_from_uuid(self, sensor_uuid):
+        try:
+            sensor_uuid = str(sensor_uuid)
+        except TypeError:
+            return ERR_BAD_PARAM
+        except:
+            return ERR_UNKNOWN
+        try:
+            systems = self._data[ch.KEY_SYSTEMS]
+        except KeyError:
+            return ERR_ENTITY_NOT_EXISTS
+        # iterate through tanks
+        try:
+            for system in systems:
+                tanks = system[ch.KEY_TANKS]
+                for tank in tanks:
+                    sensors = tank[ch.KEY_SENSORS]
+                    for sensor in sensors:
+                        if sensor[ch.KEY_UUID] == sensor_uuid:
+                            return json.dumps(sensor)
+        except KeyError:
+            pass
+        except:
+            return ERR_UNKNOWN
+        # iterate through crops
+        try:
+            for system in systems:
+                crops = system[ch.KEY_CROPS]
+                for crop in crops:
+                    sensors = crop[ch.KEY_SENSORS]
+                    for sensor in sensors:
+                        if sensor[ch.KEY_UUID] == sensor_uuid:
+                            return json.dumps(sensor)
+            return ERR_ENTITY_NOT_EXISTS
+        except KeyError:
+            return ERR_ENTITY_NOT_EXISTS
+        return None
