@@ -41,3 +41,9 @@ services:
       - ./init/config/description_gen.py:/home/description_gen.py
       - ./test/data:/data
       - ./test/backend_test.py:/home/backend_test.py
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
