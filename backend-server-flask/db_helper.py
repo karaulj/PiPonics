@@ -138,19 +138,20 @@ class DataAccessLayer(object):
             return ERR_BAD_SENSOR_PARAM
         self._logger.debug('Sensor tablename: {}'.format(sensor_tablename))
         # check start time param (None = default)
+        self._logger.debug('Start time param: {}'.format(start_time))
         start_dt = None
         if start_time is not None:
-            self._logger.debug('Start time param: {}'.format(start_time))
             start_dt = dbu.get_datetime_from_iso8601_str(start_time)
             if start_dt is None:
                 return ERR_BAD_START_TIME_PARAM
         # check end time param (None = default)
+        self._logger.debug('End time param: {}'.format(end_time))
         end_dt = None
         if end_time is not None:
-            self._logger.debug('End time param: {}'.format(end_time))
             end_dt = dbu.get_datetime_from_iso8601_str(end_time)
             if end_dt is None:
                 return ERR_BAD_END_TIME_PARAM
+        # check start time is before end time
         if start_dt is not None and end_dt is not None:
             if start_dt > end_dt:
                 return ERR_START_AFTER_END

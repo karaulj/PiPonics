@@ -58,7 +58,7 @@ def is_sensor_item(sensor_item:dict):
         if is_required:
             try:
                 sensor_item[property]
-            except KeyError:
+            except:
                 return False
     return True
 

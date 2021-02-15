@@ -19,6 +19,7 @@ import db_utils as dbu
 from http_utils import (
     HTTPHeaders, HTTPHeaderValues, APIParams
 )
+import db_helper as dbh
 import main
 
 
@@ -409,11 +410,11 @@ class Test_dal_api_methods(unittest.TestCase):
             time.sleep(0.1)
 
     def apitest_template(self):
-        # tests are run against db container
-        # schema/table are created and destroyed in setUp/tearDown methods
-        # API server is also created in setUp and destroyed in tearDown
+        # tests are run against db container.
+        # schema/table are created and destroyed in setUp/tearDown methods.
+        # API server is also created in setUp and destroyed in tearDown.
+        # db connections are automatically created/closed.
 
-        # tests are responsible for creating/commiting/closing connections
         # tests should include adding data to created table and
         # running queries against that data
         pass
@@ -424,37 +425,39 @@ class Test_dal_api_methods(unittest.TestCase):
             INSERT INTO
             {table} ({time_col}, {val_col})
             VALUES
-            ('2021-02-15T02:53:18.932274+00:00'::timestamptz, 32.1::FLOAT);
+            ('2021-02-15T02:53:18.932274'::timestamp, 32.1::FLOAT);
             INSERT INTO
             {table} ({time_col}, {val_col})
             VALUES
-            ('2022-08-20T12:43:12.342174+00:00'::timestamptz, 43.2::FLOAT);
+            ('2022-08-20T12:43:12.342174'::timestamp, 43.2::FLOAT);
             INSERT INTO
             {table} ({time_col}, {val_col})
             VALUES
-            ('2024-11-21T22:48:10.342876+00:00'::timestamptz, 54.3::FLOAT);
+            ('2024-11-21T22:48:10.342876'::timestamp, 54.3::FLOAT);
             """.format(
                 table=self.table,
                 time_col=dbu.SENSOR_TIMESTAMP_COL_NAME,
                 val_col=dbu.SENSOR_READING_COL_NAME
             ))
         self.conn.commit()
-        """
-        with self.conn.cursor() as cur:
-            cur.execute("
-            SELECT ({time_col}, {val_col}) FROM {table};".format(
-                table=self.table,
-                time_col=dbu.SENSOR_TIMESTAMP_COL_NAME,
-                val_col=dbu.SENSOR_READING_COL_NAME
-            ))
-            results = cur.fetchall()
-        dt = results[0][0]
-        self.assertEqual(dt.year, 2021)
-        """
+
+        """ NO START TIME / NO END TIME TESTS """
+        # no start/end times, missing uuid
+        r = requests.get(self.base_url+'/sensor/data')
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        # no start/end times, invalid uuid
+        r = requests.get(self.base_url+'/sensor/data?{}=an-invalid-uuid'.format(ch.KEY_UUID))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_SENSOR_PARAM_MSG)
+        # no start/end times, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}'.format(ch.KEY_UUID, self.sensor_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
         data = r.json()
+        self.assertEqual(len(data), 3)
         first_val = data[0][APIParams.SENSOR_READING_VALUE]
         self.assertEqual(first_val, 32.1)
         first_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
@@ -464,6 +467,262 @@ class Test_dal_api_methods(unittest.TestCase):
         self.assertEqual(first_dt.hour, 2)
         self.assertEqual(first_dt.minute, 53)
         self.assertEqual(first_dt.second, 18)
+        second_val = data[1][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(second_val, 43.2)
+        second_dt = dbu.get_datetime_from_iso8601_str(data[1][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(second_dt.year, 2022)
+        self.assertEqual(second_dt.month, 8)
+        self.assertEqual(second_dt.day, 20)
+        self.assertEqual(second_dt.hour, 12)
+        self.assertEqual(second_dt.minute, 43)
+        self.assertEqual(second_dt.second, 12)
+        third_val = data[2][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(third_val, 54.3)
+        third_dt = dbu.get_datetime_from_iso8601_str(data[2][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(third_dt.year, 2024)
+        self.assertEqual(third_dt.month, 11)
+        self.assertEqual(third_dt.day, 21)
+        self.assertEqual(third_dt.hour, 22)
+        self.assertEqual(third_dt.minute, 48)
+        self.assertEqual(third_dt.second, 10)
+
+        """ YES START TIME / NO END TIME TESTS """
+        # empty start time, no end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            ''
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        # invalid start time, no end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            'not_a_datetime'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        # valid start time, no end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2022-01-09T22:51:59.342174'        # should return last two records
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 2)
+        second_val = data[0][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(second_val, 43.2)
+        second_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(second_dt.year, 2022)
+        self.assertEqual(second_dt.month, 8)
+        self.assertEqual(second_dt.day, 20)
+        self.assertEqual(second_dt.hour, 12)
+        self.assertEqual(second_dt.minute, 43)
+        self.assertEqual(second_dt.second, 12)
+        third_val = data[1][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(third_val, 54.3)
+        third_dt = dbu.get_datetime_from_iso8601_str(data[1][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(third_dt.year, 2024)
+        self.assertEqual(third_dt.month, 11)
+        self.assertEqual(third_dt.day, 21)
+        self.assertEqual(third_dt.hour, 22)
+        self.assertEqual(third_dt.minute, 48)
+        self.assertEqual(third_dt.second, 10)
+        # valid start time, no end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2032-01-09T22:51:59.342174'        # should return no records
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 0)
+
+        """ NO START TIME / YES END TIME TESTS """
+        # no start time, empty end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.END_TIME,
+            ''
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        # no start time, invalid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.END_TIME,
+            'still_not_a_datetime'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        # no start time, valid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.END_TIME,
+            '2022-08-20T12:43:12.342174'        # should return first two records
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 2)
+        first_val = data[0][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(first_val, 32.1)
+        first_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(first_dt.year, 2021)
+        self.assertEqual(first_dt.month, 2)
+        self.assertEqual(first_dt.day, 15)
+        self.assertEqual(first_dt.hour, 2)
+        self.assertEqual(first_dt.minute, 53)
+        self.assertEqual(first_dt.second, 18)
+        second_val = data[1][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(second_val, 43.2)
+        second_dt = dbu.get_datetime_from_iso8601_str(data[1][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(second_dt.year, 2022)
+        self.assertEqual(second_dt.month, 8)
+        self.assertEqual(second_dt.day, 20)
+        self.assertEqual(second_dt.hour, 12)
+        self.assertEqual(second_dt.minute, 43)
+        self.assertEqual(second_dt.second, 12)
+        # valid start time, no end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.END_TIME,
+            '1932-01-09T22:51:59.342174'        # should return no records
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 0)
+
+        """ YES START TIME / YES END TIME TESTS """
+        # invalid start time, valid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2023243-21-74T12:42:4112.23532532234',
+            APIParams.END_TIME,
+            '2024-11-21T22:48:10.342876'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        # valid start time, invalid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2022-08-20T12:43:12.342174',
+            APIParams.END_TIME,
+            '2024532543252333.35325443T'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        # start time after end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2022-08-20T12:43:13.342174',
+            APIParams.END_TIME,
+            '2022-08-20T12:43:12.342174'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, dbh.ERR_START_AFTER_END_MSG)
+        # valid start time, valid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2022-08-20T12:43:12.342174',
+            APIParams.END_TIME,
+            '2022-08-20T12:43:12.342174'
+        ))      # should return second record only
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 1)
+        second_val = data[0][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(second_val, 43.2)
+        second_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(second_dt.year, 2022)
+        self.assertEqual(second_dt.month, 8)
+        self.assertEqual(second_dt.day, 20)
+        self.assertEqual(second_dt.hour, 12)
+        self.assertEqual(second_dt.minute, 43)
+        self.assertEqual(second_dt.second, 12)
+        # valid start time, valid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '2012-12-28T12:43:12.123456',
+            APIParams.END_TIME,
+            '2034-01-20T22:45:52.332674'
+        ))      # should return all records
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 3)
+        first_val = data[0][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(first_val, 32.1)
+        first_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(first_dt.year, 2021)
+        self.assertEqual(first_dt.month, 2)
+        self.assertEqual(first_dt.day, 15)
+        self.assertEqual(first_dt.hour, 2)
+        self.assertEqual(first_dt.minute, 53)
+        self.assertEqual(first_dt.second, 18)
+        second_val = data[1][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(second_val, 43.2)
+        second_dt = dbu.get_datetime_from_iso8601_str(data[1][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(second_dt.year, 2022)
+        self.assertEqual(second_dt.month, 8)
+        self.assertEqual(second_dt.day, 20)
+        self.assertEqual(second_dt.hour, 12)
+        self.assertEqual(second_dt.minute, 43)
+        self.assertEqual(second_dt.second, 12)
+        third_val = data[2][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(third_val, 54.3)
+        third_dt = dbu.get_datetime_from_iso8601_str(data[2][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(third_dt.year, 2024)
+        self.assertEqual(third_dt.month, 11)
+        self.assertEqual(third_dt.day, 21)
+        self.assertEqual(third_dt.hour, 22)
+        self.assertEqual(third_dt.minute, 48)
+        self.assertEqual(third_dt.second, 10)
+        # valid start time, valid end time, correct uuid
+        r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            self.sensor_uuid,
+            APIParams.START_TIME,
+            '1912-12-28T12:43:12.123456',
+            APIParams.END_TIME,
+            '1934-01-20T22:45:52.332674'
+        ))      # should return no records
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        self.assertEqual(len(data), 0)
+
 
 
 if __name__ == "__main__":

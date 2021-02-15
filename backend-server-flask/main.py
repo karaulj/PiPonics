@@ -244,6 +244,10 @@ def get_sensor_data():
         return_val = dbh.ERR_BAD_END_TIME_PARAM_MSG
         status = HTTPStatus.BAD_REQUEST
         headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == dbh.ERR_START_AFTER_END:
+        return_val = dbh.ERR_START_AFTER_END_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
     else:
         status = HTTPStatus.OK
         headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.APPLICATION_JSON
