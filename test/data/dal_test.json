@@ -1,0 +1,18 @@
+{
+  "systems": [
+    {
+      "name": "sys",
+      "tanks": [
+        {
+          "name": "test",
+          "sensors": [
+            {
+              "type": "pH",
+              "name": "data"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

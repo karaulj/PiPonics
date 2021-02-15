@@ -15,6 +15,12 @@ SENSOR_PRIMARY_KEY_COL_NAME = "entry_id"
 SENSOR_TIMESTAMP_COL_NAME = "time"
 SENSOR_READING_COL_NAME = "value"
 
+SENSOR_COLS = [
+    "{} SERIAL PRIMARY KEY".format(SENSOR_PRIMARY_KEY_COL_NAME),
+    "{} timestamp DEFAULT (now() at time zone 'utc') NOT NULL".format(SENSOR_TIMESTAMP_COL_NAME),
+    "{} FLOAT NOT NULL".format(SENSOR_READING_COL_NAME)
+]
+
 
 """ START SQL QUERY HELPER FUNCTIONS """
 def get_sql_schema_create_str(schema_name:str) -> str:
@@ -34,6 +40,13 @@ VALUES ({2})
 ON CONFLICT DO NOTHING;
 """.format(table_name, ", ".join(col_names), ", ".join(col_vals))
 """ END SQL QUERY HELPER FUNCTIONS """
+
+
+def get_create_sensor_table_str(sys_name, container_name, sensor_name):
+    return get_sql_table_create_str(
+        table_name=get_sensor_tablename(sys_name, container_name, sensor_name),
+        columns=SENSOR_COLS
+    )
 
 
 def get_sensor_tablename(system_name:str, container_name:str, sensor_name:str):

@@ -6,14 +6,18 @@ import random
 from http import (
     HTTPStatus
 )
+from datetime import timezone
 import logging
+
 import requests
+import psycopg2
 
 import description_gen as dg
 import config_utils as ch
 import entity_utils as eu
+import db_utils as dbu
 from http_utils import (
-    HTTPHeaders, HTTPHeaderValues
+    HTTPHeaders, HTTPHeaderValues, APIParams
 )
 import main
 
@@ -27,7 +31,7 @@ def is_valid_uuid(uuid_str):
     return False
 
 
-class Test_api_methods(unittest.TestCase):
+class Test_static_api_methods(unittest.TestCase):
 
     def setUp(self):
         self._original_stdout = sys.stdout
@@ -281,6 +285,185 @@ class Test_api_methods(unittest.TestCase):
 
         self._shutdown_server()
 
+
+#@unittest.skip('not ready yet')
+class Test_dal_api_methods(unittest.TestCase):
+    def setUp(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+        logging.disable(logging.CRITICAL)
+        self.api_port = str(random.randint(49152, 65534))
+        self.api_host = '127.0.0.1'
+        self.base_url = 'http://{}:{}'.format(self.api_host, self.api_port)
+        self.conn = self._get_db_conn()
+        self._schema = 'sys'
+        self.table = dbu.get_sensor_tablename(self._schema, 'test', 'data')
+        self._create_schema(self.conn, schema=self._schema)
+        self._create_table(self.conn, tablename=self.table)
+        #self.conn.commit()
+        #self.conn.close()
+        self._set_desc_file(json_file='/data/dal_test.json')
+        self._start_server()
+        self.sensor_uuid = self._get_sensor_uuid()
+    def tearDown(self):
+        if not self.conn:
+            self.conn = self._get_db_conn()
+        self._drop_schema(self.conn, schema=self._schema)
+        self.conn.close()
+        self._shutdown_server()
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+        logging.disable(logging.NOTSET)
+
+    def _create_schema(self, conn, schema):
+        with conn.cursor() as cur:
+            cur.execute(dbu.get_sql_schema_create_str(
+                schema_name=schema
+            ))
+        return
+
+    def _create_table(self, conn, tablename):
+        with conn.cursor() as cur:
+            cur.execute(dbu.get_sql_table_create_str(
+                table_name=self.table,
+                columns=dbu.SENSOR_COLS
+            ))
+        return
+
+    def _drop_schema(self, conn, schema):
+        with conn.cursor() as cur:
+            cur.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(schema))
+        conn.commit()
+        return
+
+    def _get_db_conn(self):
+        dbname = os.getenv('POSTGRES_DB')
+        host = os.getenv('POSTGRES_HOST')
+        password = os.getenv('POSTGRES_PASSWORD')
+        user = os.getenv('POSTGRES_USER')
+        port = os.getenv('POSTGRES_PORT')
+        num_retries = 0
+        connected = False
+        last_exc = None
+        while num_retries < 10:
+            try:
+                return psycopg2.connect(
+                    dbname=dbname,
+                    user=user,
+                    host=host,
+                    password=password,
+                    port=port
+                )
+            except Exception as exc:
+                last_exc = exc
+                time.sleep(1)
+            num_retries += 1
+        if not connected:
+            if last_exc is None:
+                raise Exception("There was an error connecting to the database. Ensure it is running.")
+            else:
+                raise last_exc
+        return
+
+    def _set_desc_file(self, json_file):
+        os.environ['DESCRIPTION_FILE'] = 'dal_desc.json'
+        dg.generate_description_file(json_file, '/common/dal_desc.json')
+
+    def _start_server(self):
+        main.start_api_server(
+            do_sem_init=True,
+            do_dal_init=True,
+            do_ioc_init=False,
+            flask_host=self.api_host,
+            flask_port=self.api_port
+        )
+        num_retries = 0
+        connected = False
+        while num_retries < 10:
+            try:
+                requests.get(self.base_url+'/test')
+                connected = True
+                break
+            except:
+                time.sleep(0.5)
+            num_retries += 1
+        if not connected:
+            raise Exception("There was an error starting the server.")
+        return
+
+    def _shutdown_server(self):
+        requests.get(self.base_url+'/shutdown')
+
+    def _get_sensor_uuid(self):
+        systems = requests.get(self.base_url+'/system/all').json()
+        return systems[0][ch.KEY_TANKS][0][ch.KEY_SENSORS][0][ch.KEY_UUID]
+
+    def _tests(self):
+        for name in dir(self):
+            if name.startswith('apitest'):
+                yield name, getattr(self, name)
+
+    def test_all_seq(self):
+        for name, test_method in self._tests():
+            test_method()
+            time.sleep(0.1)
+
+    def apitest_template(self):
+        # tests are run against db container
+        # schema/table are created and destroyed in setUp/tearDown methods
+        # API server is also created in setUp and destroyed in tearDown
+
+        # tests are responsible for creating/commiting/closing connections
+        # tests should include adding data to created table and
+        # running queries against that data
+        pass
+
+    def apitest_get_sensor_data_multiple(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""
+            INSERT INTO
+            {table} ({time_col}, {val_col})
+            VALUES
+            ('2021-02-15T02:53:18.932274+00:00'::timestamptz, 32.1::FLOAT);
+            INSERT INTO
+            {table} ({time_col}, {val_col})
+            VALUES
+            ('2022-08-20T12:43:12.342174+00:00'::timestamptz, 43.2::FLOAT);
+            INSERT INTO
+            {table} ({time_col}, {val_col})
+            VALUES
+            ('2024-11-21T22:48:10.342876+00:00'::timestamptz, 54.3::FLOAT);
+            """.format(
+                table=self.table,
+                time_col=dbu.SENSOR_TIMESTAMP_COL_NAME,
+                val_col=dbu.SENSOR_READING_COL_NAME
+            ))
+        self.conn.commit()
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("
+            SELECT ({time_col}, {val_col}) FROM {table};".format(
+                table=self.table,
+                time_col=dbu.SENSOR_TIMESTAMP_COL_NAME,
+                val_col=dbu.SENSOR_READING_COL_NAME
+            ))
+            results = cur.fetchall()
+        dt = results[0][0]
+        self.assertEqual(dt.year, 2021)
+        """
+        r = requests.get(self.base_url+'/sensor/data?{}={}'.format(ch.KEY_UUID, self.sensor_uuid))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.APPLICATION_JSON)
+        data = r.json()
+        first_val = data[0][APIParams.SENSOR_READING_VALUE]
+        self.assertEqual(first_val, 32.1)
+        first_dt = dbu.get_datetime_from_iso8601_str(data[0][APIParams.SENSOR_READING_TIME])
+        self.assertEqual(first_dt.year, 2021)
+        self.assertEqual(first_dt.month, 2)
+        self.assertEqual(first_dt.day, 15)
+        self.assertEqual(first_dt.hour, 2)
+        self.assertEqual(first_dt.minute, 53)
+        self.assertEqual(first_dt.second, 18)
 
 
 if __name__ == "__main__":

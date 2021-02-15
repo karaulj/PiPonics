@@ -93,8 +93,11 @@ class DataAccessLayer(object):
             return None
         system = sensor_item[ch.KEY_SYSTEM]
         container = sensor_item[ch.KEY_TANK_OR_CROP]
-        sensor_type = sensor_item[ch.KEY_TYPE]
-        return dbu.get_sensor_tablename(system, container, sensor_type)
+        if ch.KEY_NAME in sensor_item:
+            sensor = sensor_item[ch.KEY_NAME]
+        else:
+            sensor = sensor_item[ch.KEY_TYPE]
+        return dbu.get_sensor_tablename(system, container, sensor)
 
     def _get_sensor_data_query(self, tablename:str, start:datetime, end:datetime):
         query = "SELECT {col_names} FROM {table}".format(
