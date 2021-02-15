@@ -150,21 +150,19 @@ def generate_db_tables_str(json_data:dict) -> str:
                         sensor_name = ch.get_default_sensor_name(sensor_type)
 
                     if not sys_schema_created:
-                        # create schema for system (at least one sensor exists)
                         f_contents.append(dbu.get_sql_schema_create_str(sys_name))
                         sys_schema_created = True
-
-                    # create table for sensor
-                    sensor_datatype = ch.get_sensor_sql_data_type(json_data, sensor_type)
-
                     logger.debug("Found sensor: '{}'".format(sensor_name))
-
-                    columns = []
-                    columns.append("{} SERIAL PRIMARY KEY".format(dbu.SENSOR_PRIMARY_KEY_COL_NAME))
-                    columns.append("{} timestamptz DEFAULT LOCALTIMESTAMP".format(dbu.SENSOR_TIMESTAMP_COL_NAME))
-                    columns.append("{} {} NOT NULL".format(dbu.SENSOR_READING_COL_NAME, sensor_datatype))
-                    sensor_tablename = dbu.get_sensor_tablename(sys_name, container_name, sensor_name)
-                    f_contents.append(dbu.get_sql_table_create_str(sensor_tablename, columns))
+                    # create table
+                    sensor_tablename = dbu.get_sensor_tablename(
+                        system_name=sys_name,
+                        container_name=container_name,
+                        sensor_name=sensor_name
+                    )
+                    f_contents.append(dbu.get_sql_table_create_str(
+                        table_name=sensor_tablename,
+                        columns=dbu.SENSOR_COLS
+                    ))
 
     return ''.join(f_contents)
 
