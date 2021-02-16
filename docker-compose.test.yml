@@ -33,6 +33,8 @@ services:
     build:
       context: ./backend-server-flask
       dockerfile: Dockerfile-test
+    depends_on:
+      - db
     volumes:
       - ./utils/${CONFIG_UTILS_PY_FILE}:/home/${CONFIG_UTILS_PY_FILE}
       - ./utils/${ENTITY_UTILS_PY_FILE}:/home/${ENTITY_UTILS_PY_FILE}
