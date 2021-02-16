@@ -259,8 +259,8 @@ def get_sensor_data():
 
 def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:bool=True, flask_host:str='127.0.0.1', flask_port:str='5000'):
     flask_thread = None
-    stop_thr_event = None
-    uart_rx_thread = None
+    stop_ioc = None
+    ioc_thread = None
     try:
         global sem
         global dal
@@ -307,18 +307,18 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
         # init ioc
         if do_ioc_init:
             ioc = None
+            """
+            stop_ioc = threading.Event()
+            ioc_thread = threading.Thread(target=, args=(stop_ioc,))
+            ioc_thread.start()
+            """
 
         flask_thread = threading.Thread(target=app.run, args=(flask_host, flask_port))
         flask_thread.start()
-        """
-        stop_thr_event = threading.Event()
-        uart_rx_thread = threading.Thread(target=, args=(stop_thr_event,))
-        uart_rx_thread.start()
-        """
     except:
         print("An error occurred while trying to start the backend API server.")
-        if uart_rx_thread is not None and stop_thr_event is not None:
-            stop_thr_event.set()
+        if ioc_thread is not None and stop_ioc is not None:
+            stop_ioc.set()
         if dal is not None:
             dal.shutdown()
         raise

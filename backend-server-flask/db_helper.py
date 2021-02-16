@@ -21,6 +21,8 @@ ERR_START_AFTER_END = 97
 ERR_START_AFTER_END_MSG = "The provided start time must be equal to or less than end time."
 ERR_DAL_NOT_INITIALIZED = 96
 ERR_DAL_NOT_INITIALIZED_MSG = "No database connection was found."
+ERR_BAD_READING_PARAM = 95
+ERR_BAD_READING_PARAM_MSG = "The provided sensor reading is missing or invalid."
 
 
 class DataAccessLayer(object):
@@ -39,6 +41,9 @@ class DataAccessLayer(object):
         self.sensor_cols = [dbu.SENSOR_TIMESTAMP_COL_NAME, dbu.SENSOR_READING_COL_NAME]
         self.time_row_idx = 0
         self.val_row_idx = 1
+
+    def __del__(self):
+        self.shutdown()
 
     def _init_logging(self):
         logger = logging.getLogger(__name__)
@@ -131,7 +136,14 @@ class DataAccessLayer(object):
             })
         return new_results
 
-    def get_sensor_data(self, sensor_item:str, start_time:str, end_time:str):
+    def get_sensor_data(self, sensor_item:str, start_time:str=None, end_time:str=None):
+        """Fetch sensor data from a preexisting database.
+
+        Keyword arguments:
+        sensor_item -- a dictionary following the schema defined in db_utils.
+        start -- the start date, ISO-8601 format (default None).
+        end -- the end date, ISO-8601 format (default None).
+        """
         # check sensor item param
         sensor_tablename = self._get_tablename_from_sensor_item(sensor_item)
         if sensor_tablename is None:
@@ -174,6 +186,16 @@ class DataAccessLayer(object):
         sensor_data = self._get_sensor_data_from_results(results)
         self._logger.debug("Final sensor data: {}".format(sensor_data))
         return json.dumps(sensor_data)
+
+    def add_sensor_reading(self, value:float):
+        """Add a sensor reading to a preexisting database.
+
+        Keyword arguments:
+        value -- the sensor value to add.
+        """
+        if type(value) != float:
+            return ERR_BAD_READING_PARAM
+        pass
 
     def shutdown(self):
         if self._conn_pool:
