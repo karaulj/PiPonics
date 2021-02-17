@@ -724,6 +724,47 @@ class Test_dal_api_methods(unittest.TestCase):
         self.assertEqual(len(data), 0)
 
 
+class Test_ioc_api_methods(unittest.TestCase):
+    def setUp(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+        logging.disable(logging.CRITICAL)
+        self.api_port = str(random.randint(49152, 65534))
+        self.api_host = '127.0.0.1'
+        self.base_url = 'http://{}:{}'.format(self.api_host, self.api_port)
+        self._start_server()
+    def tearDown(self):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+        logging.disable(logging.NOTSET)
+        self._shutdown_server()
+
+    def _start_server(self):
+        main.start_api_server(
+            do_sem_init=True,
+            do_dal_init=False,
+            do_ioc_init=True,
+            flask_host=self.api_host,
+            flask_port=self.api_port
+        )
+        num_retries = 0
+        connected = False
+        while num_retries < 10:
+            try:
+                requests.get(self.base_url+'/test')
+                connected = True
+                break
+            except:
+                time.sleep(0.5)
+            num_retries += 1
+        if not connected:
+            raise Exception("There was an error starting the server.")
+        return
+
+    def _shutdown_server(self):
+        requests.get(self.base_url+'/shutdown')
+
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
