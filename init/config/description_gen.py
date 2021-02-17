@@ -33,6 +33,7 @@ def generate_entity_contents(json_data:dict) -> dict:
         systems = []
 
     all_uuids = []
+    sensor_cnt = 0
 
     # iterate through systems
     for i, system in enumerate(systems):
@@ -123,6 +124,9 @@ def generate_entity_contents(json_data:dict) -> dict:
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_TANK_OR_CROP] = container_name
+                    # add sensor id
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSOR_ID] = sensor_cnt
+                    sensor_cnt += 1
 
                 # delete empty sensors from list (if any)
                 all_sensors = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS]

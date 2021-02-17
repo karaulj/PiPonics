@@ -21,6 +21,7 @@ KEY_CROPS = "crops"
 #KEY_SENSOR = "sensor"
 KEY_SENSORS = "sensors"
 KEY_SENSORS_UNITS = "units"
+KEY_SENSOR_ID = "sensor_id"
 
 #KEY_ACTUATOR = "actuator"
 KEY_ACTUATORS = "actuators"
