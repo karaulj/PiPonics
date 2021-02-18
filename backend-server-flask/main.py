@@ -14,6 +14,7 @@ from http_utils import (
 import entity_utils as eu
 import db_utils as dbu
 import db_helper as dbh
+import io_controller
 
 logger = logging.getLogger(__name__)
 sem = None          # Static Entity Manager object
@@ -257,6 +258,16 @@ def get_sensor_data():
     return response
 
 
+def get_desc_file():
+    description_file = os.getenv('DESCRIPTION_FILE')
+    if description_file == '' or description_file is None:
+        print("Error: DESCRIPTION_FILE environment variable not set.")
+        sys.exit(1)
+    else:
+        description_file = "/common/{}".format(description_file)
+    return description_file
+
+
 def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:bool=True, flask_host:str='127.0.0.1', flask_port:str='5000'):
     flask_thread = None
     stop_ioc = None
@@ -267,12 +278,7 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
         global ioc
         # init sem
         if do_sem_init:
-            description_file = os.getenv('DESCRIPTION_FILE')
-            if description_file == '' or description_file is None:
-                print("Error: DESCRIPTION_FILE environment variable not set.")
-                sys.exit(1)
-            else:
-                description_file = "/common/{}".format(description_file)
+            description_file = get_desc_file()
             sem = eu.StaticEntityManger(description_file)
         # init dal
         if do_dal_init:
@@ -306,7 +312,11 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
             )
         # init ioc
         if do_ioc_init:
-            ioc = None
+            if not do_sem_init:
+                description_file = get_desc_file()
+            ioc = io_controller.IOController(description_file)
+            ioc.init_uart()
+            ioc.uart_tx_echo()
             """
             stop_ioc = threading.Event()
             ioc_thread = threading.Thread(target=, args=(stop_ioc,))
@@ -321,6 +331,8 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
             stop_ioc.set()
         if dal is not None:
             dal.shutdown()
+        if ioc is not None:
+            ioc.shutdown_uart()
         raise
 
 
