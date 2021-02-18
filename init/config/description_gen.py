@@ -33,10 +33,12 @@ def generate_entity_contents(json_data:dict) -> dict:
         systems = []
 
     all_uuids = []
-    sensor_cnt = 0
 
     # iterate through systems
     for i, system in enumerate(systems):
+        # system-specific actuator/sensor count
+        actuator_cnt = 0
+        sensor_cnt = 0
         # get system name
         try:
             sys_name = system[ch.KEY_NAME].replace('/', '')
@@ -95,6 +97,9 @@ def generate_entity_contents(json_data:dict) -> dict:
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_SYSTEM] = sys_name
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_TANK_OR_CROP] = container_name
+                    # add actuator id
+                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_ACTUATOR_ID] = actuator_cnt
+                    actuator_cnt += 1
 
                 # find sensors
                 try:

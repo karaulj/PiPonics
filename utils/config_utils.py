@@ -26,6 +26,7 @@ KEY_SENSOR_ID = "sensor_id"
 #KEY_ACTUATOR = "actuator"
 KEY_ACTUATORS = "actuators"
 KEY_ACTUATORS_MAIN = "main"
+KEY_ACTUATOR_ID = "actuator_id"
 
 KEY_METADATA = "metadata"
 KEY_METADATA_SENSORS = "sensors"
