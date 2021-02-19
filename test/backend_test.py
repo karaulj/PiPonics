@@ -20,6 +20,8 @@ from http_utils import (
     HTTPHeaders, HTTPHeaderValues, APIParams
 )
 import db_helper as dbh
+import io_controller
+
 import main
 
 
@@ -728,7 +730,7 @@ class Test_ioc_api_methods(unittest.TestCase):
     def setUp(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
-        logging.disable(logging.CRITICAL)
+        #logging.disable(logging.CRITICAL)
         self.api_port = str(random.randint(49152, 65534))
         self.api_host = '127.0.0.1'
         self.base_url = 'http://{}:{}'.format(self.api_host, self.api_port)
@@ -736,7 +738,7 @@ class Test_ioc_api_methods(unittest.TestCase):
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self._original_stdout
-        logging.disable(logging.NOTSET)
+        #logging.disable(logging.NOTSET)
         self._shutdown_server()
 
     def _start_server(self):
@@ -764,6 +766,57 @@ class Test_ioc_api_methods(unittest.TestCase):
     def _shutdown_server(self):
         requests.get(self.base_url+'/shutdown')
 
+    def _tests(self):
+        for name in dir(self):
+            if name.startswith('apitest'):
+                yield name, getattr(self, name)
+
+    def test_all_seq(self):
+        for name, test_method in self._tests():
+            test_method()
+            time.sleep(0.1)
+
+    def apitest_drive(self):
+        # no uuid, no drive val
+        r = requests.post(self.base_url+'/actuator/drive')
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        # invalid uuid, no drive val
+        r = requests.post(self.base_url+'/actuator/drive?{}=invalid'.format(ch.KEY_UUID))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, io_controller.ERR_BAD_ACTUATOR_PARAM_MSG)
+        # valid uuid, invalid drive val
+        ret_0_uuid = 'return0'
+        r = requests.post(self.base_url+'/actuator/drive?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            ret_0_uuid,
+            APIParams.ACTUATOR_DRIVE_VALUE,
+            'an-invalid-drive-val'
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, io_controller.ERR_BAD_DRIVE_VAL_PARAM_MSG)
+        # valid uuid, no drive val
+        ret_1_uuid = 'return1'
+        r = requests.post(self.base_url+'/actuator/drive?{}={}'.format(
+            ch.KEY_UUID,
+            ret_1_uuid
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, '1')
+        # valid uuid, valid drive val
+        r = requests.post(self.base_url+'/actuator/drive?{}={}&{}={}'.format(
+            ch.KEY_UUID,
+            ret_0_uuid,
+            APIParams.ACTUATOR_DRIVE_VALUE,
+            125
+        ))
+        self.assertEqual(r.status_code, HTTPStatus.OK)
+        self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
+        self.assertEqual(r.text, '0')
 
 
 if __name__ == "__main__":

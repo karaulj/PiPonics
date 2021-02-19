@@ -6,6 +6,14 @@ import config_utils as ch
 import serial
 
 
+ERR_BAD_ACTUATOR_PARAM = 50
+ERR_BAD_ACTUATOR_PARAM_MSG = "The referenced actuator is missing or invalid."
+ERR_BAD_DRIVE_VAL_PARAM = 49
+ERR_BAD_DRIVE_VAL_PARAM_MSG = "The provided drive value is invalid."
+ERR_IOC_NOT_INITIALIZED = 48
+ERR_IOC_NOT_INITIALIZED_MSG = "No sensor board connection was found."
+
+
 SERIAL_PORT = '/dev/ttyAMA0'    # PL011 UART (not default)
 BAUDRATE = 115200
 TIMEOUT = 3
@@ -71,6 +79,9 @@ class IOController(object):
                             lookup[actuator[ch.KEY_UUID]] = actuator[ch.KEY_ACTUATOR_ID]
                     except KeyError:
                         pass
+        # add two more lookups for testing
+        lookup["return0"] = 0xFF
+        lookup["return1"] = 0xFE
         return lookup
 
     def _generate_uart_bytes(self, command:str, idx:int, payload:int):
@@ -171,3 +182,17 @@ class IOController(object):
             idx=actuator_id,
             tx_payload=drive_val
         )
+
+    def drive_actuator(self, actuator_uuid:str, drive_val:int=None):
+        try:
+            actuator_id = self._actuator_lookup[actuator_uuid]
+        except KeyError:
+            self._logger.error("No actuator id found for UUID {}".format(actuator_uuid))
+            return ERR_BAD_ACTUATOR_PARAM
+        if drive_val is None:
+            return str(self.uart_tx_drive(actuator_id))
+        try:
+            drive_val = int(drive_val)
+        except ValueError:
+            return ERR_BAD_DRIVE_VAL_PARAM
+        return str(self.uart_tx_drive(actuator_id, drive_val))

@@ -32,6 +32,10 @@ def shutdown():
     shutdown_func = request.environ.get('werkzeug.server.shutdown')
     if shutdown_func is None:
         raise RuntimeError('Not running with the Werkzeug Server; cannot shut down server.')
+    if dal is not None:
+        dal.shutdown()
+    if ioc is not None:
+        ioc.shutdown_uart()
     shutdown_func()
     return 'Shutting down server...'
 
@@ -169,6 +173,44 @@ def get_all_actuators():
     for header, header_val in headers.items():
         response.headers[header] = header_val
     return response
+@app.route('/actuator/drive', methods=["POST"])
+def drive_actuator():
+    # get parameters
+    actuator_uuid = request.args.get(APIParams.UUID)
+    if actuator_uuid is None:
+        return_val = eu.ERR_MISSING_PARAM
+    else:
+        drive_val = request.args.get(APIParams.ACTUATOR_DRIVE_VALUE)
+        try:
+            return_val = ioc.drive_actuator(actuator_uuid, drive_val)
+        except AttributeError:
+            app.logger.error('DAL has not been initialized.')
+            return_val = io_controller.ERR_IOC_NOT_INITIALIZED
+    # set response
+    headers = {}
+    if return_val == eu.ERR_MISSING_PARAM:
+        return_val = eu.ERR_MISSING_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == io_controller.ERR_IOC_NOT_INITIALIZED:
+        return_val = io_controller.ERR_IOC_NOT_INITIALIZED_MSG
+        status = HTTPStatus.INTERNAL_SERVER_ERROR
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == io_controller.ERR_BAD_ACTUATOR_PARAM:
+        return_val = io_controller.ERR_BAD_ACTUATOR_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    elif return_val == io_controller.ERR_BAD_DRIVE_VAL_PARAM:
+        return_val = io_controller.ERR_BAD_DRIVE_VAL_PARAM_MSG
+        status = HTTPStatus.BAD_REQUEST
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    else:
+        status = HTTPStatus.OK
+        headers[HTTPHeaders.CONTENT_TYPE] = HTTPHeaderValues.TEXT_PLAIN
+    response = make_response(return_val, status)
+    for header, header_val in headers.items():
+        response.headers[header] = header_val
+    return response
 
 """ SENSOR API METHODS """
 
@@ -284,24 +326,24 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
         if do_dal_init:
             pg_dbname = os.getenv('POSTGRES_DB')
             if pg_dbname == '' or pg_dbname is None:
-                print("POSTGRES_DB environment variable not set.")
+                logger.error("POSTGRES_DB environment variable not set.")
                 pg_dbname = 'postgres'
             pg_user = os.getenv('POSTGRES_USER')
             if pg_user == '' or pg_user is None:
-                print("POSTGRES_USER environment variable not set.")
+                logger.error("POSTGRES_USER environment variable not set.")
                 pg_user = 'postgres'
             pg_password = os.getenv('POSTGRES_PASSWORD')
             if pg_password == '' or pg_password is None:
-                print("POSTGRES_PASSWORD environment variable not set.")
+                logger.error("POSTGRES_PASSWORD environment variable not set.")
                 pg_password = 'postgres'
             pg_host = os.getenv("POSTGRES_HOST")
             if pg_host == '' or pg_host is None:
-                print("POSTGRES_HOST environment variable is not set.")
+                logger.error("POSTGRES_HOST environment variable is not set.")
                 pg_host = '127.0.0.1'
-                print("Skipping dal init")
+                logger.error("Skipping dal init")
             pg_port = os.getenv("POSTGRES_PORT")
             if pg_port == '' or pg_port is None:
-                print("POSTGRES_PORT environment variable is not set.")
+                logger.error("POSTGRES_PORT environment variable is not set.")
                 pg_port = '5432'
             dal = dbh.DataAccessLayer(
                 dbname = pg_dbname,
@@ -316,7 +358,10 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
                 description_file = get_desc_file()
             ioc = io_controller.IOController(description_file)
             ioc.init_uart()
-            ioc.uart_tx_echo()
+            if (ioc.uart_tx_echo() != 0):
+                logger.error("IOC UART test echo didn't return a valid value")
+            else:
+                logger.debug("IOC UART echo successful")
             """
             stop_ioc = threading.Event()
             ioc_thread = threading.Thread(target=, args=(stop_ioc,))

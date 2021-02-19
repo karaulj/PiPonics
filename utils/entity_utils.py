@@ -3,13 +3,13 @@ import logging
 
 import config_utils as ch
 
-ERR_UNKNOWN = 0
+ERR_UNKNOWN = 25
 ERR_UNKNOWN_MSG = "An internal server error was encountered and your request could not be completed."
-ERR_ENTITY_NOT_EXISTS = -1
+ERR_ENTITY_NOT_EXISTS = 26
 ERR_ENTITY_NOT_EXISTS_MSG = "The requested entity does not exist."
-ERR_BAD_PARAM = -2
+ERR_BAD_PARAM = 27
 ERR_BAD_PARAM_MSG = "The provided parameter has an incorrect type."
-ERR_MISSING_PARAM = -3
+ERR_MISSING_PARAM = 28
 ERR_MISSING_PARAM_MSG = "The request is missing a required parameter."
 
 
