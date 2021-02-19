@@ -10,6 +10,8 @@ SERIAL_PORT = '/dev/ttyAMA0'    # PL011 UART (not default)
 BAUDRATE = 115200
 TIMEOUT = 3
 
+BYTEORDER = 'little'
+
 BUFFER_SZ = 7   # 1 command byte, 1 idx byte, 4 payload bytes, 1 end frame byte
 UART_CMDS = {
     # first tx byte is command (i.e. echo, shutdown, drive actuator)
@@ -89,33 +91,44 @@ class IOController(object):
             self._logger.error("Idx must be of type int, got '{}'".format(type(payload)))
             return None
         try:
-            payload_bytes = payload.to_bytes(length=4, byteorder='little', signed=False)
+            payload_bytes = payload.to_bytes(length=4, byteorder=BYTEORDER, signed=False)
         except OverflowError:
             self._logger.error("Payload '{}' is not an unsigned 32-bit integer".format(payload))
             return None
         try:
-            idx_byte = idx.to_bytes(length=1, byteorder='little', signed=False)
+            idx_byte = idx.to_bytes(length=1, byteorder=BYTEORDER, signed=False)
         except OverflowError:
             self._logger.error("Idx '{}' is not an unsigned 8-bit integer".format(idx))
             return None
         command_byte = UART_CMDS[command]
         return command_byte + idx_byte + payload_bytes + END_BYTE   # 'bytes' object
 
-    def _uart_tx(self, command:str, idx:int, tx_payload:int, expected_rx_payload:int=0) -> bool:
+    def _uart_tx(self, command:str, idx:int, tx_payload:int) -> int:
+        """Send UART message to sensor board and get response.
+
+        Keyword arguments:
+        command -- string denoting command to send. One of UART_CMDS.keys()
+        idx     -- index (used for DRIVE cmd). Should be unsigned 8-bit int
+        tx_payload -- payload to send. Should be unsigned 32-bit int
+
+        Returns:
+        -1 if error occured
+        received value otherwise
+        """
         self._logger.debug("tx_payload param: {}".format(tx_payload))
         uart_bytes = self._generate_uart_bytes(command=command, idx=idx, payload=tx_payload)
         if uart_bytes is None:
-            return False
+            return -1
         # send uart frame
         try:
             self._logger.info("Sending UART frame: {}".format(uart_bytes))
             num_bytes_sent = self._ser.write(uart_bytes)
         except AttributeError:
-            self._logger.error("Serial device is not set up")
-            return False
+            self._logger.error("Serial device is not set up. Call init_uart() method")
+            return -1
         except serial.SerialTimeoutException:
             self._logger.error("Could not send frame, timeout reached")
-            return False
+            return -1
         if num_bytes_sent != BUFFER_SZ:
             self._logger.error("Supposed to send {} bytes, sent {}".format(BUFFER_SZ, num_bytes_sent))
         # receive echo back
@@ -123,36 +136,38 @@ class IOController(object):
         self._logger.debug("Received UART frame: {}".format(rx_bytes))
         if rx_bytes == b'':
             self._logger.error("Waited {} seconds, received empty frame".format(self._timeout))
-            return False
+            return -1
         # expect rx command byte = tx command byte
         rx_cmd_byte = rx_bytes[0]
+        if type(rx_cmd_byte) == int:
+            rx_cmd_byte = rx_cmd_byte.to_bytes(1, byteorder=BYTEORDER)
         if rx_cmd_byte != UART_CMDS[command]:
             self._logger.warning("Expected {} command byte, got {}".format(command, rx_cmd_byte))
         # expect rx end byte = tx end byte
-        rx_end_byte = rx_bytes[6]
+        rx_end_byte = rx_bytes[BUFFER_SZ-1]
+        if type(rx_end_byte) == int:
+            rx_end_byte = rx_end_byte.to_bytes(1, byteorder=BYTEORDER)
         if rx_end_byte != END_BYTE:
             self._logger.warning("Expected END final byte, got {}".format(rx_end_byte))
-        # compare payload to expected
-        rx_payload = int.from_bytes(rx_bytes[2:5], byteorder='little', signed=False)
-        if rx_payload != expected_rx_payload:
-            self._logger.error("Received payload {} doesn't match expected {}".format(rx_payload, expected_rx_payload))
-            return False
-        else:
-            return True
+        # return response from sensor board
+        return int.from_bytes(rx_bytes[2:6], byteorder=BYTEORDER, signed=False)
 
     def uart_tx_echo(self, echo_val:int=100):
         # idx is ignored for ECHO cmd
-        return self._uart_tx(
+        ret_val = self._uart_tx(
             command='ECHO',
             idx=0,
-            tx_payload=echo_val,
-            expected_rx_payload=echo_val
+            tx_payload=echo_val
         )
+        if ret_val != echo_val:
+            self._logger.error("ECHO payload '{}' doesn't match expected '{}'".format(ret_val, echo_val))
+            return -1   # fail
+        else:
+            return 0    # success
 
     def uart_tx_drive(self, actuator_id:int, drive_val:int=1):
         return self._uart_tx(
             command='DRIVE',
             idx=actuator_id,
-            tx_payload=drive_val,
-            expected_rx_payload=0   # 0 for success, other for failure
+            tx_payload=drive_val
         )
