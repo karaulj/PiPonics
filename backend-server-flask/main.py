@@ -45,7 +45,7 @@ def shutdown():
 def get_all_systems():
     return_val = sem.get_all_systems()
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_UNKNOWN:
         return_val = APIErrors.ERR_UNKNOWN_MSG
         status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -77,7 +77,7 @@ def get_all_tanks():
     else:
         return_val = sem.get_tanks_from_uuid(system_uuid)
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_UNKNOWN:
         return_val = APIErrors.ERR_UNKNOWN_MSG
         status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -113,7 +113,7 @@ def get_all_crops():
     else:
         return_val = sem.get_crops_from_uuid(system_uuid)
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_UNKNOWN:
         return_val = APIErrors.ERR_UNKNOWN_MSG
         status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -149,7 +149,7 @@ def get_all_actuators():
     else:
         return_val = sem.get_actuators_from_uuid(tank_or_crop_uuid)
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_UNKNOWN:
         return_val = APIErrors.ERR_UNKNOWN_MSG
         status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -187,7 +187,7 @@ def drive_actuator():
             app.logger.error('DAL has not been initialized.')
             return_val = APIErrors.ERR_IOC_NOT_INITIALIZED
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_MISSING_PARAM:
         return_val = APIErrors.ERR_MISSING_PARAM_MSG
         status = HTTPStatus.BAD_REQUEST
@@ -223,7 +223,7 @@ def get_all_sensors():
     else:
         return_val = sem.get_sensors_from_uuid(tank_or_crop_uuid)
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_UNKNOWN:
         return_val = APIErrors.ERR_UNKNOWN_MSG
         status = HTTPStatus.INTERNAL_SERVER_ERROR
@@ -267,7 +267,7 @@ def get_sensor_data():
                 app.logger.exception("Unknown exception in dal method", exc_info=True)
                 return_val = APIErrors.ERR_UNKNOWN
     # set response
-    headers = {}
+    headers = {HTTPHeaders.ALLOW_ORIGIN: HTTPHeaderValues.ORIGIN_ANYWHERE}
     if return_val == APIErrors.ERR_MISSING_PARAM:
         return_val = APIErrors.ERR_MISSING_PARAM_MSG
         status = HTTPStatus.BAD_REQUEST
@@ -365,7 +365,7 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
                 logger.error("IOC UART test echo didn't return a valid value")
             else:
                 logger.debug("IOC UART echo successful")
-            ioc.start_read_thr()
+            #ioc.start_read_thr()
             """
             stop_ioc = threading.Event()
             ioc_thread = threading.Thread(target=, args=(stop_ioc,))

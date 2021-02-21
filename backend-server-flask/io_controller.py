@@ -210,7 +210,10 @@ class IOController(object):
             idx=0,
             tx_payload=echo_val
         )
-        ret_val = int.from_bytes(ret_bytes, byteorder=BYTEORDER, signed=False)
+        try:
+            ret_val = int.from_bytes(ret_bytes, byteorder=BYTEORDER, signed=False)
+        except TypeError:
+            return -1   # fail
         if ret_val != echo_val:
             self._logger.error("ECHO payload '{}' doesn't match expected '{}'".format(ret_val, echo_val))
             return -1   # fail
