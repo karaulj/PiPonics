@@ -2,15 +2,7 @@ import json
 import logging
 
 import config_utils as ch
-
-ERR_UNKNOWN = 25
-ERR_UNKNOWN_MSG = "An internal server error was encountered and your request could not be completed."
-ERR_ENTITY_NOT_EXISTS = 26
-ERR_ENTITY_NOT_EXISTS_MSG = "The requested entity does not exist."
-ERR_BAD_PARAM = 27
-ERR_BAD_PARAM_MSG = "The provided parameter has an incorrect type."
-ERR_MISSING_PARAM = 28
-ERR_MISSING_PARAM_MSG = "The request is missing a required parameter."
+from http_utils import APIErrors
 
 
 class StaticEntityManger:
@@ -18,7 +10,7 @@ class StaticEntityManger:
     def __init__(self, entity_file):
         self._logger = self._init_logging()
         self._file = entity_file
-        self._data = self._get_entity_data()
+        self.data = self._get_entity_data()
 
     def _init_logging(self):
         logger = logging.getLogger(__name__)
@@ -38,11 +30,11 @@ class StaticEntityManger:
 
     def get_all_systems(self):
         try:
-            return json.dumps(self._data[ch.KEY_SYSTEMS])
+            return json.dumps(self.data[ch.KEY_SYSTEMS])
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
 
     """ TANK METHODS """
 
@@ -50,19 +42,19 @@ class StaticEntityManger:
         try:
             entity_uuid = str(entity_uuid)
         except TypeError:
-            return ERR_BAD_PARAM
+            return APIErrors.ERR_BAD_PARAM
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         try:
-            systems = self._data[ch.KEY_SYSTEMS]
+            systems = self.data[ch.KEY_SYSTEMS]
             for system in systems:
                 if system[ch.KEY_UUID] == entity_uuid:
                     return json.dumps(system[ch.KEY_TANKS])
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         return None
 
     """ CROP METHODS """
@@ -71,19 +63,19 @@ class StaticEntityManger:
         try:
             entity_uuid = str(entity_uuid)
         except TypeError:
-            return ERR_BAD_PARAM
+            return APIErrors.ERR_BAD_PARAM
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         try:
-            systems = self._data[ch.KEY_SYSTEMS]
+            systems = self.data[ch.KEY_SYSTEMS]
             for system in systems:
                 if system[ch.KEY_UUID] == entity_uuid:
                     return json.dumps(system[ch.KEY_CROPS])
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         return None
 
     """ ACTUATOR METHODS """
@@ -92,13 +84,13 @@ class StaticEntityManger:
         try:
             entity_uuid = str(entity_uuid)
         except TypeError:
-            return ERR_BAD_PARAM
+            return APIErrors.ERR_BAD_PARAM
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         try:
-            systems = self._data[ch.KEY_SYSTEMS]
+            systems = self.data[ch.KEY_SYSTEMS]
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         # iterate through tanks
         try:
             for system in systems:
@@ -109,7 +101,7 @@ class StaticEntityManger:
         except KeyError:
             pass
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         # iterate through crops
         try:
             for system in systems:
@@ -117,9 +109,9 @@ class StaticEntityManger:
                 for crop in crops:
                     if crop[ch.KEY_UUID] == entity_uuid:
                         return json.dumps(crop[ch.KEY_ACTUATORS])
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         return None
 
     """ SENSOR METHODS """
@@ -128,13 +120,13 @@ class StaticEntityManger:
         try:
             entity_uuid = str(entity_uuid)
         except TypeError:
-            return ERR_BAD_PARAM
+            return APIErrors.ERR_BAD_PARAM
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         try:
-            systems = self._data[ch.KEY_SYSTEMS]
+            systems = self.data[ch.KEY_SYSTEMS]
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         # iterate through tanks
         try:
             for system in systems:
@@ -145,7 +137,7 @@ class StaticEntityManger:
         except KeyError:
             pass
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         # iterate through crops
         try:
             for system in systems:
@@ -153,21 +145,21 @@ class StaticEntityManger:
                 for crop in crops:
                     if crop[ch.KEY_UUID] == entity_uuid:
                         return json.dumps(crop[ch.KEY_SENSORS])
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         return None
     def get_sensor_item_from_uuid(self, sensor_uuid):
         try:
             sensor_uuid = str(sensor_uuid)
         except TypeError:
-            return ERR_BAD_PARAM
+            return APIErrors.ERR_BAD_PARAM
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         try:
-            systems = self._data[ch.KEY_SYSTEMS]
+            systems = self.data[ch.KEY_SYSTEMS]
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         # iterate through tanks
         try:
             for system in systems:
@@ -180,7 +172,7 @@ class StaticEntityManger:
         except KeyError:
             pass
         except:
-            return ERR_UNKNOWN
+            return APIErrors.ERR_UNKNOWN
         # iterate through crops
         try:
             for system in systems:
@@ -190,7 +182,7 @@ class StaticEntityManger:
                     for sensor in sensors:
                         if sensor[ch.KEY_UUID] == sensor_uuid:
                             return sensor
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         except KeyError:
-            return ERR_ENTITY_NOT_EXISTS
+            return APIErrors.ERR_ENTITY_NOT_EXISTS
         return None

@@ -3,9 +3,7 @@ import sys, os
 import time
 import uuid
 import random
-from http import (
-    HTTPStatus
-)
+from http import HTTPStatus
 from datetime import timezone
 import logging
 
@@ -14,14 +12,8 @@ import psycopg2
 
 import description_gen as dg
 import config_utils as ch
-import entity_utils as eu
 import db_utils as dbu
-from http_utils import (
-    HTTPHeaders, HTTPHeaderValues, APIParams
-)
-import db_helper as dbh
-import io_controller
-
+from http_utils import HTTPHeaders, HTTPHeaderValues, APIParams, APIErrors
 import main
 
 
@@ -102,7 +94,7 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/system/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
 
         self._shutdown_server()
 
@@ -125,12 +117,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/tank/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # tanks all, invalid uuid param
         r = requests.get(self.base_url+'/tank/all?uuid=6b88fed7-02b8-44b2-8de3')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # tanks all, correct uuid
         r = requests.get(self.base_url+'/tank/all?uuid={}'.format(system1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -144,12 +136,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/crop/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # crops all, invalid uuid param
         r = requests.get(self.base_url+'/crop/all?uuid=6b88fed7-02b8-44b2-671c45d41c99')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # crops all, correct uuid
         r = requests.get(self.base_url+'/crop/all?uuid={}'.format(system1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -161,12 +153,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/sensor/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # sensors all, invalid uuid param
         r = requests.get(self.base_url+'/sensor/all?uuid=6b88fed7-02b8-8de3-671c45d41c99')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # sensors all, correct uuid
         r = requests.get(self.base_url+'/sensor/all?uuid={}'.format(system1_tank1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -179,12 +171,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/actuator/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # actuators all, invalid uuid param
         r = requests.get(self.base_url+'/actuator/all?uuid=6b88fed7-44b2-8de3-671c45d41c99')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # actuators all, correct uuid
         r = requests.get(self.base_url+'/actuator/all?uuid={}'.format(system1_tank1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -216,12 +208,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/tank/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # tanks all, invalid uuid param
         r = requests.get(self.base_url+'/tank/all?uuid=anincorrectvalue')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # tanks all, correct uuid
         r = requests.get(self.base_url+'/tank/all?uuid={}'.format(system1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -235,12 +227,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/crop/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # crops all, invalid uuid param
         r = requests.get(self.base_url+'/crop/all?uuid=another_incorrect_value')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # crops all, correct uuid
         r = requests.get(self.base_url+'/crop/all?uuid={}'.format(system2_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -254,12 +246,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/sensor/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # sensors all, invalid uuid param
         r = requests.get(self.base_url+'/sensor/all?uuid=yet-another-incorrect-value')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # sensors all, correct uuid
         r = requests.get(self.base_url+'/sensor/all?uuid={}'.format(system2_crop1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -272,12 +264,12 @@ class Test_static_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/actuator/all')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # actuators all, invalid uuid param
         r = requests.get(self.base_url+'/actuator/all?uuid=r3411y.b4d.at.th15')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_ENTITY_NOT_EXISTS_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_ENTITY_NOT_EXISTS_MSG)
         # actuators all, correct uuid
         r = requests.get(self.base_url+'/actuator/all?uuid={}'.format(system1_tank1_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -448,12 +440,12 @@ class Test_dal_api_methods(unittest.TestCase):
         r = requests.get(self.base_url+'/sensor/data')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # no start/end times, invalid uuid
         r = requests.get(self.base_url+'/sensor/data?{}=an-invalid-uuid'.format(ch.KEY_UUID))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_SENSOR_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_SENSOR_PARAM_MSG)
         # no start/end times, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}'.format(ch.KEY_UUID, self.sensor_uuid))
         self.assertEqual(r.status_code, HTTPStatus.OK)
@@ -498,7 +490,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_START_TIME_PARAM_MSG)
         # invalid start time, no end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -508,7 +500,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_START_TIME_PARAM_MSG)
         # valid start time, no end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -560,7 +552,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_END_TIME_PARAM_MSG)
         # no start time, invalid end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -570,7 +562,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_END_TIME_PARAM_MSG)
         # no start time, valid end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -624,7 +616,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_START_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_START_TIME_PARAM_MSG)
         # valid start time, invalid end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -636,7 +628,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_BAD_END_TIME_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_END_TIME_PARAM_MSG)
         # start time after end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -648,7 +640,7 @@ class Test_dal_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, dbh.ERR_START_AFTER_END_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_START_AFTER_END_MSG)
         # valid start time, valid end time, correct uuid
         r = requests.get(self.base_url+'/sensor/data?{}={}&{}={}&{}={}'.format(
             ch.KEY_UUID,
@@ -781,12 +773,12 @@ class Test_ioc_api_methods(unittest.TestCase):
         r = requests.post(self.base_url+'/actuator/drive')
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, eu.ERR_MISSING_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_MISSING_PARAM_MSG)
         # invalid uuid, no drive val
         r = requests.post(self.base_url+'/actuator/drive?{}=invalid'.format(ch.KEY_UUID))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, io_controller.ERR_BAD_ACTUATOR_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_ACTUATOR_PARAM_MSG)
         # valid uuid, invalid drive val
         ret_0_uuid = 'return0'
         r = requests.post(self.base_url+'/actuator/drive?{}={}&{}={}'.format(
@@ -797,7 +789,7 @@ class Test_ioc_api_methods(unittest.TestCase):
         ))
         self.assertEqual(r.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(r.headers[HTTPHeaders.CONTENT_TYPE], HTTPHeaderValues.TEXT_PLAIN)
-        self.assertEqual(r.text, io_controller.ERR_BAD_DRIVE_VAL_PARAM_MSG)
+        self.assertEqual(r.text, APIErrors.ERR_BAD_DRIVE_VAL_PARAM_MSG)
         # valid uuid, no drive val
         ret_1_uuid = 'return1'
         r = requests.post(self.base_url+'/actuator/drive?{}={}'.format(
