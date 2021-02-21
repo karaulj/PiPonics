@@ -2,12 +2,13 @@
 
 class HTTPHeaders:
     CONTENT_TYPE = "Content-Type"
-
+    ALLOW_ORIGIN = "Access-Control-Allow-Origin"
 
 class HTTPHeaderValues:
     APPLICATION_JSON = "application/json"
     TEXT_PLAIN = "text/plain"
     TEXT_HTML = "text/html"
+    ORIGIN_ANYWHERE = "*"
 
 
 class APIParams:
