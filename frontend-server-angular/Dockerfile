@@ -7,6 +7,7 @@ COPY package.json /app/package.json
 
 # install node.js depedencies
 RUN npm install
+RUN npm install bootstrap
 RUN npm install -g @angular/cli
 
 # move app files to workdir
