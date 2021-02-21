@@ -8,21 +8,7 @@ from psycopg2 import pool
 
 import config_utils as ch
 import db_utils as dbu
-from http_utils import APIParams
-
-
-ERR_BAD_SENSOR_PARAM = 100
-ERR_BAD_SENSOR_PARAM_MSG = "The referenced sensor item is missing or invalid."
-ERR_BAD_START_TIME_PARAM = 99
-ERR_BAD_START_TIME_PARAM_MSG = "The provided start time is missing or invalid."
-ERR_BAD_END_TIME_PARAM = 98
-ERR_BAD_END_TIME_PARAM_MSG = "The provided end time is missing or invalid."
-ERR_START_AFTER_END = 97
-ERR_START_AFTER_END_MSG = "The provided start time must be equal to or less than end time."
-ERR_DAL_NOT_INITIALIZED = 96
-ERR_DAL_NOT_INITIALIZED_MSG = "No database connection was found."
-ERR_BAD_READING_PARAM = 95
-ERR_BAD_READING_PARAM_MSG = "The provided sensor reading is missing or invalid."
+from http_utils import APIParams, APIErrors
 
 
 class DataAccessLayer(object):
@@ -127,6 +113,13 @@ class DataAccessLayer(object):
         query += ";"
         return query, query_params
 
+    def _get_add_reading_query(self, tablename:str, reading:str):
+        return "INSERT INTO {table} ({val_col}) VALUES ({value});".format(
+            table=tablename,
+            val_col=self.sensor_cols[self.val_row_idx],
+            value=reading
+        )
+
     def _get_sensor_data_from_results(self, results:list):
         new_results = list()
         for row in results:
@@ -147,7 +140,7 @@ class DataAccessLayer(object):
         # check sensor item param
         sensor_tablename = self._get_tablename_from_sensor_item(sensor_item)
         if sensor_tablename is None:
-            return ERR_BAD_SENSOR_PARAM
+            return APIErrors.ERR_BAD_SENSOR_PARAM
         self._logger.debug('Sensor tablename: {}'.format(sensor_tablename))
         # check start time param (None = default)
         self._logger.debug('Start time param: {}'.format(start_time))
@@ -155,18 +148,18 @@ class DataAccessLayer(object):
         if start_time is not None:
             start_dt = dbu.get_datetime_from_iso8601_str(start_time)
             if start_dt is None:
-                return ERR_BAD_START_TIME_PARAM
+                return APIErrors.ERR_BAD_START_TIME_PARAM
         # check end time param (None = default)
         self._logger.debug('End time param: {}'.format(end_time))
         end_dt = None
         if end_time is not None:
             end_dt = dbu.get_datetime_from_iso8601_str(end_time)
             if end_dt is None:
-                return ERR_BAD_END_TIME_PARAM
+                return APIErrors.ERR_BAD_END_TIME_PARAM
         # check start time is before end time
         if start_dt is not None and end_dt is not None:
             if start_dt > end_dt:
-                return ERR_START_AFTER_END
+                return APIErrors.ERR_START_AFTER_END
         # generate query
         query, query_params = self._get_sensor_data_query(sensor_tablename, start_dt, end_dt)
         self._logger.debug("Generated query: {}".format(query))
@@ -180,22 +173,49 @@ class DataAccessLayer(object):
             self.put_conn(conn)
             self._logger.debug('Raw query results: {}'.format(results))
         except Exception as e:
-            self._logger.exception("Could not execute SQL query.")
-            raise
+            self._logger.exception("Could not execute get sensor data SQL query.", exc_info=True)
+            try:
+                self.put_conn(conn)
+            except:
+                pass
+            results = []
         # prep data
         sensor_data = self._get_sensor_data_from_results(results)
         self._logger.debug("Final sensor data: {}".format(sensor_data))
         return json.dumps(sensor_data)
 
-    def add_sensor_reading(self, value:float):
+    def add_sensor_reading(self, sensor_item:dict, reading:float):
         """Add a sensor reading to a preexisting database.
 
         Keyword arguments:
-        value -- the sensor value to add.
+        sensor_item -- the sensor to add a reading for.
+        reading -- the sensor reading to add.
         """
-        if type(value) != float:
-            return ERR_BAD_READING_PARAM
-        pass
+        if type(reading) != float:
+            logging.error("Could not add sensor reading to db; type is '{}', not float".format(type(reading)))
+            return 1
+        sensor_tablename = self._get_tablename_from_sensor_item(sensor_item)
+        if sensor_tablename is None:
+            logging.error("Could not add sensor reading to db; sensor item is invalid")
+            return 1
+        add_query = self._get_add_reading_query(sensor_tablename, str(reading))
+        self._logger.debug("Full add query: {}".format(add_query))
+        # execute query
+        try:
+            conn = self.get_conn()
+            with conn.cursor() as cur:
+                cur.execute(add_query)
+            conn.commit()
+            self.put_conn(conn)
+        except Exception as e:
+            self._logger.exception("Could not execute add sensor reading SQL query.", exc_info=True)
+            try:
+                self.put_conn(conn)
+            except:
+                pass
+            return 1
+        self._logger.info("Added reading {} to table {}".format(reading, sensor_tablename))
+        return 0
 
     def shutdown(self):
         if self._conn_pool:
