@@ -1,0 +1,46 @@
+<div class="sysOverview">
+
+  <div style="text-align:center">
+    <h1>PiPonics Web UI</h1>
+  </div>
+
+  <div class="sysContent">
+    <div class="row">
+      <div class="col">
+        <div class="sysSelect">
+          <h5>System:</h5>
+          <select class="form-control" #sysdrop (change)="getSystemOverview(sysdrop.value)">
+            <option *ngFor="let system of systems" value={{system.uuid}}>
+              {{system.name}}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sysBody" *ngIf="!noSystemsPresent">
+    <div class="row">
+      <!-- Left panel: sensor data -->
+      <div class="col-md-8">
+        <div class="sensorDataPanel" style="background-color: red">
+          <h4 style="text-align:left">Sensor Data</h4>
+          <p>test</p>
+        </div>
+      </div>
+      <!-- Right panel: actuators -->
+      <div class="col-md-4">
+        <div class="actuatorDrivePanel" style="background-color: yellow">
+          <h4 style="text-align:left">Actuators</h4>
+          <p>test</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="noSysPresent" *ngIf="noSystemsPresent">
+    <h4>No systems present</h4>
+  </div>
+
+</div>

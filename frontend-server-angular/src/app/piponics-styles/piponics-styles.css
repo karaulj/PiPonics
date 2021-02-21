@@ -1,0 +1,35 @@
+/*
+h1, h2, h3, h4, h5, h6, a, p {
+  font-family: Ubuntu Mono;
+}
+*/
+
+h1 {
+  font-family: Ubuntu Mono;
+  font-weight: bold;
+  font-size: 200%;
+}
+/*
+html {
+  background-color: rgba(220,230,242,1);
+}
+*/
+.sysSelect {
+  text-align: right;
+  width:200px;
+  margin:10px ;
+  float:right;
+}
+
+.sysOverview {
+  background-color: rgba(220,230,242,1);
+  font-family: Ubuntu Mono;
+}
+
+
+.noSysPresent {
+  font-weight:lighter;
+  text-align: center;
+  font-style: italic;
+  color: grey;
+}
