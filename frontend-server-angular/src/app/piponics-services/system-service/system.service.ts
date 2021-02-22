@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
+//import { lastValueFrom } from 'rxjs';
 
 import { ISystem } from 'src/app/piponics-interfaces/system';
 
@@ -18,6 +19,7 @@ export class SystemService {
 
   getAllSystems(): Observable<ISystem[]> {
     let tempVar = this.http.get<ISystem[]>(this.baseUrl+"/system/all");
+    //await lastValueFrom(tempVar);
     return tempVar;
   }
 

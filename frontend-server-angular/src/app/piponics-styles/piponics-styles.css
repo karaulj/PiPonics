@@ -9,11 +9,11 @@ h1 {
   font-weight: bold;
   font-size: 200%;
 }
-/*
+
 html {
   background-color: rgba(220,230,242,1);
 }
-*/
+
 .sysSelect {
   text-align: right;
   width:200px;
@@ -21,13 +21,18 @@ html {
   float:right;
 }
 
+.sysBody {
+  padding-left: 5px;
+}
+
 .sysOverview {
-  background-color: rgba(220,230,242,1);
+  /*background-color: rgba(220,230,242,1);*/
   font-family: Ubuntu Mono;
 }
 
 
 .noSysPresent {
+  padding-bottom: 10px;
   font-weight:lighter;
   text-align: center;
   font-style: italic;

@@ -8,6 +8,8 @@ COPY package.json /app/package.json
 # install node.js depedencies
 RUN npm install
 RUN npm install bootstrap
+RUN npm install chart.js
+RUN npm install @types/chart.js
 RUN npm install -g @angular/cli
 
 # move app files to workdir

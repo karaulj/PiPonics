@@ -1,3 +1,4 @@
+<html>
 <div class="sysOverview">
 
   <div style="text-align:center">
@@ -20,17 +21,21 @@
   </div>
 
   <div class="sysBody" *ngIf="!noSystemsPresent">
+  <!--<div class="sysBody" *ngIf="!noSystemsPresent">-->
     <div class="row">
       <!-- Left panel: sensor data -->
-      <div class="col-md-8">
-        <div class="sensorDataPanel" style="background-color: red">
+      <div class="col-md-8" style="border-right:2px solid #ccc;">
+        <div class="sensorDataPanel">
           <h4 style="text-align:left">Sensor Data</h4>
           <p>test</p>
+          <div *ngFor="let chart of charts; let i=index">
+            <canvas #canvas id="{{i}}">{{ chart }}</canvas>
+          </div>
         </div>
       </div>
       <!-- Right panel: actuators -->
       <div class="col-md-4">
-        <div class="actuatorDrivePanel" style="background-color: yellow">
+        <div class="actuatorDrivePanel">
           <h4 style="text-align:left">Actuators</h4>
           <p>test</p>
         </div>
@@ -44,3 +49,4 @@
   </div>
 
 </div>
+</html>
