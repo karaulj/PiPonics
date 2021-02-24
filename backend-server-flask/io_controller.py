@@ -13,8 +13,8 @@ SERIAL_PORT = '/dev/ttyAMA0'    # PL011 UART (not default)
 BAUDRATE = 115200
 TIMEOUT = 3
 BYTEORDER = 'little'
-POST_FREQ = 30                  # time between sensor readings posts (seconds)
-NULL_READING = 4294967296.0   # MCU max float val, no matching sensor id present
+POST_FREQ = 300                 # time between sensor readings posts (seconds)
+NULL_READING = 4294967296.0     # MCU max float val, no matching sensor id present
 
 BUFFER_SZ = 6   # 1 command byte, 1 idx byte, 4 payload bytes, 1 end frame byte
 UART_CMDS = {   # first tx byte is command (i.e. echo, shutdown, drive actuator)
