@@ -39,7 +39,7 @@ class DataAccessLayer(object):
         s_handler.setFormatter(formatter)
 
         logger.addHandler(s_handler)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         return logger
 
     def get_conn(self):
@@ -110,7 +110,7 @@ class DataAccessLayer(object):
                 timestamp_col=dbu.SENSOR_TIMESTAMP_COL_NAME
             )
             query_params.append(end)
-        query += ";"
+        query += " ORDER BY {} ASC;".format(self.sensor_cols[self.time_row_idx])
         return query, query_params
 
     def _get_add_reading_query(self, tablename:str, reading:str):
