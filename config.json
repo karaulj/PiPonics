@@ -10,13 +10,11 @@
           "actuators": [
             {
               "type": "lights",
-              "nice_name": "Primary Fish Tank Lights"
+              "nice_name": "Primary Fish Tank Lights",
+              "drive_with": "value"
             }
           ],
           "sensors": [
-            {
-              "type": "pH"
-            },
             {
               "type": "temp"
             }
@@ -30,7 +28,7 @@
           "actuators": [
             {
               "type": "waterpump",
-              "main": true
+              "drive_with": "switch"
             }
           ],
           "sensors": [

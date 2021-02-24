@@ -90,6 +90,12 @@ def generate_entity_contents(json_data:dict) -> dict:
                     except KeyError:
                         logger.warning("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
+                    # get actuator drive type
+                    try:
+                        actuator[ch.KEY_ACTUATOR_DRIVE_TYPE]
+                    except KeyError:
+                        logger.warning("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_ACTUATOR_DRIVE_TYPE, sys_name, container_name, k+1))
+                        continue
                     # add uuid for actuator
                     all_uuids, actuator_uuid = generate_uuid(all_uuids)
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_UUID] = actuator_uuid

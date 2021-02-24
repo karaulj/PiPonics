@@ -25,7 +25,7 @@ KEY_SENSOR_ID = "sensor_id"
 
 #KEY_ACTUATOR = "actuator"
 KEY_ACTUATORS = "actuators"
-KEY_ACTUATORS_MAIN = "main"
+KEY_ACTUATOR_DRIVE_TYPE = "drive_with"
 KEY_ACTUATOR_ID = "actuator_id"
 
 KEY_METADATA = "metadata"
