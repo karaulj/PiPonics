@@ -17,7 +17,7 @@ SENSOR_READING_COL_NAME = "value"
 
 SENSOR_COLS = [
     "{} SERIAL PRIMARY KEY".format(SENSOR_PRIMARY_KEY_COL_NAME),
-    "{} timestamp DEFAULT (now() at time zone 'utc') NOT NULL".format(SENSOR_TIMESTAMP_COL_NAME),
+    "{} timestamptz DEFAULT (now() at time zone 'utc') NOT NULL".format(SENSOR_TIMESTAMP_COL_NAME),
     "{} FLOAT NOT NULL".format(SENSOR_READING_COL_NAME)
 ]
 
