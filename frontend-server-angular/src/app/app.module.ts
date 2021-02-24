@@ -7,13 +7,15 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SystemOverviewComponent } from './system-overview/system-overview.component';
+import { SensorDisplayComponent } from './sensor-display/sensor-display.component';
 //import { routing } from './app.routing';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    SystemOverviewComponent
+    SystemOverviewComponent,
+    SensorDisplayComponent
   ],
   imports: [
     BrowserModule,

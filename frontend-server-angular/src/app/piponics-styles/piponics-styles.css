@@ -22,7 +22,7 @@ html {
 }
 
 .sysBody {
-  padding-left: 5px;
+  padding-left: 10px;
 }
 
 .sysOverview {
@@ -37,4 +37,9 @@ html {
   text-align: center;
   font-style: italic;
   color: grey;
+}
+
+.piponicsHeader {
+  text-align: center;
+  padding-top: 10px;
 }

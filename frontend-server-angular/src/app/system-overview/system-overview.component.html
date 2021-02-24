@@ -1,7 +1,7 @@
 <html>
 <div class="sysOverview">
 
-  <div style="text-align:center">
+  <div class="piponicsHeader">
     <h1>PiPonics Web UI</h1>
   </div>
 
@@ -21,24 +21,25 @@
   </div>
 
   <div class="sysBody" *ngIf="!noSystemsPresent">
+
   <!--<div class="sysBody" *ngIf="!noSystemsPresent">-->
     <div class="row">
       <!-- Left panel: sensor data -->
-      <div class="col-md-8" style="border-right:2px solid #ccc;">
-        <div class="sensorDataPanel">
+      <div class="col-md-8 sensorDataPanel" style="border-right:2px solid #ccc;">
           <h4 style="text-align:left">Sensor Data</h4>
           <p>test</p>
-          <div *ngFor="let chart of charts; let i=index">
-            <canvas #canvas id="{{i}}">{{ chart }}</canvas>
+          <div class="col">
+            <div class="row">
+              <div *ngFor="let item of sensorItems; let i=index">
+                <app-sensor-display [id]="i.toString()" [sensorItem]="item"></app-sensor-display>
+              </div>
+            </div>
           </div>
-        </div>
       </div>
       <!-- Right panel: actuators -->
-      <div class="col-md-4">
-        <div class="actuatorDrivePanel">
+      <div class="col-md-4 actuatorDrivePanel">
           <h4 style="text-align:left">Actuators</h4>
           <p>test</p>
-        </div>
       </div>
 
     </div>
