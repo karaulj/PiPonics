@@ -3,6 +3,6 @@ export interface ISensor {
   type: string;
   system: string;
   tank_or_crop: string;
-  nice_name?: string;
   units?: string;
+  nice_name?: string;
 }

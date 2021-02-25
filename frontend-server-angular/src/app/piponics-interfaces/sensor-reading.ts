@@ -1,4 +1,4 @@
 export interface ISensorReading {
-  t: Date;
+  t: string;
   v: number;
 }

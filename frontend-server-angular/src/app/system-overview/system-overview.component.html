@@ -1,52 +1,64 @@
 <html>
-<div class="sysOverview">
+<div class="sysOverview container-fluid">
 
-  <div class="piponicsHeader">
-    <h1>PiPonics Web UI</h1>
+  <div class="piponicsHeader row">
+    <div class="col">
+      <h1>PiPonics Web UI</h1>
+    </div>
   </div>
 
-  <div class="sysContent">
-    <div class="row">
+  <div class="sysContent row">
       <div class="col">
         <div class="sysSelect">
           <h5>System:</h5>
           <select class="form-control" #sysdrop (change)="getSystemOverview(sysdrop.value)">
             <option *ngFor="let system of systems" value={{system.uuid}}>
-              {{system.name}}
+              <div *ngIf="system.nice_name">
+                {{system.name}} - {{system.nice_name}}
+              </div>
+              <div *ngIf="!system.nice_name">
+                {{system.name}}
+              </div>
             </option>
           </select>
         </div>
       </div>
-    </div>
   </div>
 
-  <div class="sysBody" *ngIf="!noSystemsPresent">
-
-  <!--<div class="sysBody" *ngIf="!noSystemsPresent">-->
-    <div class="row">
-      <!-- Left panel: sensor data -->
-      <div class="col-md-8 sensorDataPanel" style="border-right:2px solid #ccc;">
+  <div class="sysBody row" *ngIf="!noSystemsPresent">
+    <!-- Left panel: sensor data -->
+    <div class="col-md-8 sensorDataPanel" style="border-right:2px solid #ccc;">
+      <div class="row">
+        <div class="col">
           <h4 style="text-align:left">Sensor Data</h4>
-          <p>test</p>
-          <div class="col">
-            <div class="row">
-              <div *ngFor="let item of sensorItems; let i=index">
-                <app-sensor-display [id]="i.toString()" [sensorItem]="item"></app-sensor-display>
-              </div>
-            </div>
-          </div>
+        </div>
       </div>
-      <!-- Right panel: actuators -->
-      <div class="col-md-4 actuatorDrivePanel">
-          <h4 style="text-align:left">Actuators</h4>
-          <p>test</p>
+      <div class="row">
+        <div class="col-md-6 sensorGraph" *ngFor="let item of sensorItems; let i=index">
+          <app-sensor-display [id]="i.toString()" [sensorItem]="item"></app-sensor-display>
+        </div>
       </div>
-
     </div>
+    <!-- Right panel: actuators -->
+    <div class="col-md-4 actuatorDrivePanel">
+      <div class="row">
+        <div class="col">
+          <h4 style="text-align:left">Actuators</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 actuatorControl" *ngFor="let item of actuatorItems">
+          <app-actuator-control [actuatorItem]="item"></app-actuator-control>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="noSysPresent" *ngIf="noSystemsPresent">
-    <h4>No systems present</h4>
+  <div class="noSysPresent row" *ngIf="noSystemsPresent">
+    <div class="col">
+      <h4>No systems present</h4>
+  </div>
   </div>
 
 </div>

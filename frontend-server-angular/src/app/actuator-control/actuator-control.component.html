@@ -1,0 +1,50 @@
+<div class="row">
+  <!-- If switch -->
+  <div class="col" *ngIf="actuatorItem.drive_with == 'switch'">
+
+    <div class="row">
+
+      <div class="col-10">
+        <h5>{{name}}</h5>
+      </div>
+      <div class="col-2">
+        <label class="switch">
+        <input type="checkbox" [checked]="switchOn" (change)="flipSwitch()">
+        <span class="slider round"></span>
+        </label>
+      </div>
+
+    </div>
+
+  </div>
+  <!-- If value/slider -->
+  <div class="col" *ngIf="actuatorItem.drive_with == 'value'">
+
+    <div class="row">
+
+      <div class="col">
+        <h5>{{name}}</h5>
+      </div>
+
+      <div class="col-8">
+        <div class="row">
+
+          <div class="col-1">
+            <input type="text" id="textInput" value="" style="max-width:30px">
+          </div>
+
+          <div class="col-8" style="min-width:140px">
+            <input type="range" id="volume" name="volume" min="0" max="11">
+          </div>
+
+          <div class="col-3">
+            <input type="button" value="Submit">
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

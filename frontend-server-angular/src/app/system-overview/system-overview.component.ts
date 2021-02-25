@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ISystem } from '../piponics-interfaces/system';
 import { ISensor } from '../piponics-interfaces/sensor';
+import { IActuator } from '../piponics-interfaces/actuator';
 import { SystemService } from '../piponics-services/system-service/system.service';
 
 //import { SensorDisplayComponent } from '../sensor-display/sensor-display.component';
@@ -19,8 +20,8 @@ export class SystemOverviewComponent implements OnInit {
   errMsg: string;
   noSystemsPresent: boolean;
   selSystem: ISystem = null;
-  sensorUuids: string[];
   sensorItems: ISensor[];
+  actuatorItems: IActuator[];
 
   constructor(private _systemService: SystemService) { }
 
@@ -30,7 +31,6 @@ export class SystemOverviewComponent implements OnInit {
     sysSubject.subscribe(
       data => {
         this.systems = data;
-        console.log("systems", this.systems);
         if (this.systems == null) {
           this.noSystemsPresent = true;
         }
@@ -38,44 +38,40 @@ export class SystemOverviewComponent implements OnInit {
           this.noSystemsPresent = true;
         }
         else {
-          console.log("else", this.systems);
-          this.selSystem = this.systems[0];
-          this.getSystemOverview(this.selSystem.uuid);
+          this.noSystemsPresent = false;
+          this.getSystemOverview(this.systems[0].uuid);
         }
       }
     )
-    console.log("next line");
   }
 
   getSystemOverview(systemUuid: string) {
-    //console.log(document.getElementById("testcanvas").getContext("2d"));
-    // get sensors from system
-    for (const [key, sys] of Object.entries(this.systems)) {
+    // select system
+    for (let sys of Object.values(this.systems)) {
       if (sys.uuid == systemUuid) {
+        this.selSystem = sys;
         console.log("selected", sys.name);
       }
     }
-    //this.getSensorUuids();
     this.getSensorItems();
-    //console.log("sensor uuids", this.sensorUuids);
-    // print sensor graphs
+    this.getActuatorItems();
   }
 
   getSensorItems() {
     if (this.selSystem != null) {
       this.sensorItems = [];
       // iterate over tanks
-      for (const [key, tank] of Object.entries(this.selSystem.tanks)) {
+      for (let tank of Object.values(this.selSystem.tanks)) {
         if (tank.hasOwnProperty('sensors')) {
-          for (const [key, sensor] of Object.entries(tank.sensors)) {
+          for (let sensor of Object.values(tank.sensors)) {
             this.sensorItems.push(sensor);
           }
         }
       }
       // iterate over crops
-      for (const [key, crop] of Object.entries(this.selSystem.crops)) {
+      for (let crop of Object.values(this.selSystem.crops)) {
         if (crop.hasOwnProperty('sensors')) {
-          for (const [key, sensor] of Object.entries(crop.sensors)) {
+          for (let sensor of Object.values(crop.sensors)) {
             this.sensorItems.push(sensor);
           }
         }
@@ -83,25 +79,26 @@ export class SystemOverviewComponent implements OnInit {
     }
   }
 
-  getSensorUuids() {
+  getActuatorItems() {
     if (this.selSystem != null) {
-      this.sensorUuids = [];
+      this.actuatorItems = [];
       // iterate over tanks
-      for (const [key, tank] of Object.entries(this.selSystem.tanks)) {
-        if (tank.hasOwnProperty('sensors')) {
-          for (const [key, sensor] of Object.entries(tank.sensors)) {
-            this.sensorUuids.push(sensor.uuid);
+      for (let tank of Object.values(this.selSystem.tanks)) {
+        if (tank.hasOwnProperty('actuators')) {
+          for (let actuator of Object.values(tank.actuators)) {
+            this.actuatorItems.push(actuator);
           }
         }
       }
       // iterate over crops
-      for (const [key, crop] of Object.entries(this.selSystem.crops)) {
-        if (crop.hasOwnProperty('sensors')) {
-          for (const [key, sensor] of Object.entries(crop.sensors)) {
-            this.sensorUuids.push(sensor.uuid);
+      for (let crop of Object.values(this.selSystem.crops)) {
+        if (crop.hasOwnProperty('actuators')) {
+          for (let actuator of Object.values(crop.actuators)) {
+            this.actuatorItems.push(actuator);
           }
         }
       }
+      console.log("actuators", this.actuatorItems);
     }
   }
 
