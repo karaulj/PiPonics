@@ -226,7 +226,10 @@ class IOController(object):
             idx=actuator_id,
             tx_payload=drive_val
         )
-        return int.from_bytes(ret_bytes, byteorder=BYTEORDER, signed=False)
+        if ret_bytes == b'\xff\xff\xff\xff':    # no actuator id found
+            return -1
+        else:
+            return int.from_bytes(ret_bytes, byteorder=BYTEORDER, signed=False)
 
     def uart_tx_read(self, sensor_id:int):
         ret_bytes = self._uart_tx(
