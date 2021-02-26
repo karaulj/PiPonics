@@ -1,13 +1,14 @@
-<div class="row">
+
+<div class="row" style="padding-bottom:10px">
   <!-- If switch -->
   <div class="col" *ngIf="actuatorItem.drive_with == 'switch'">
 
     <div class="row">
 
-      <div class="col-10">
+      <div class="col">
         <h5>{{name}}</h5>
       </div>
-      <div class="col-2">
+      <div class="col-2" style="min-width:100px">
         <label class="switch">
         <input type="checkbox" [checked]="switchOn" (change)="flipSwitch()">
         <span class="slider round"></span>
@@ -26,19 +27,24 @@
         <h5>{{name}}</h5>
       </div>
 
-      <div class="col-8">
+      <div class="col-4" style="">
         <div class="row">
-
-          <div class="col-1">
-            <input type="text" id="textInput" value="" style="max-width:30px">
+          <!--
+          <div class="col" style="min-width:150px; padding-top:10px; display:block;margin: 0 auto">
+            <input type="range" #slider (change)="update(slider.value);" min="0" max="{{rangeMax}}">
           </div>
-
-          <div class="col-8" style="min-width:140px">
-            <input type="range" id="volume" name="volume" min="0" max="11">
+          -->
+          <!--
+          <div class="col-2" style="padding-top:10px; display:block; margin: 0 auto">
+            <input type="text" id="textInput" value="" style="max-width:40px">
           </div>
+          -->
 
-          <div class="col-3">
-            <input type="button" value="Submit">
+          <div class="col" style="margin: 0 auto;padding-top:10px;">
+            <input type="number" id="drVal" min=0 max={{rangeMax}} value={{rangeMax}} style="width:50px">
+          </div>
+          <div class="col-3" style="margin: 0 auto;padding-top:10px;min-width:100px;">
+            <input type="button" value="Submit" (click)="submitValue()">
           </div>
 
         </div>

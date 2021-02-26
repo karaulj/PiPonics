@@ -39,8 +39,14 @@ export class ActuatorControlComponent implements OnInit {
     }
   }
 
-  updateSlider() {
-
+  submitValue() {
+    let val:number = parseInt((<HTMLInputElement>document.getElementById('drVal')).value);
+    if (val < 0 || val > this.rangeMax) {
+      (<HTMLInputElement>document.getElementById('drVal')).value = "0";
+    } else {
+      this.driveVal = val;
+      this.postActuatorDrive();
+    }
   }
 
   flipSwitch() {

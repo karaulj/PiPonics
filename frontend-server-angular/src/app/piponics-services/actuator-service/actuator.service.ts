@@ -15,7 +15,7 @@ export class ActuatorService {
 
   postActuatorDrive(uuid:string, val:number): Observable<any> {
     let tempVar = this.http.post<any>(
-      this.baseUrl+"/actuator/drive?uuid="+uuid+"?value="+val,
+      this.baseUrl+"/actuator/drive?uuid="+uuid+"&value="+val,
       null
     );
     return tempVar;
