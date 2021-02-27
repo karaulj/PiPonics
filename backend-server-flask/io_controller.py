@@ -192,14 +192,6 @@ class IOController(object):
             rx_cmd_byte = rx_cmd_byte.to_bytes(1, byteorder=BYTEORDER)
         if rx_cmd_byte != UART_CMDS[command]:
             self._logger.warning("Expected {} command byte, got {}".format(command, rx_cmd_byte))
-        """
-        # expect rx end byte = tx end byte
-        rx_end_byte = rx_bytes[BUFFER_SZ-1]
-        if type(rx_end_byte) == int:
-            rx_end_byte = rx_end_byte.to_bytes(1, byteorder=BYTEORDER)
-        if rx_end_byte != END_BYTE:
-            self._logger.warning("Expected END final byte, got {}".format(rx_end_byte))
-        """
         # return response from sensor board
         return rx_bytes[2:BUFFER_SZ]        # bytes object
 
@@ -228,8 +220,11 @@ class IOController(object):
         )
         if ret_bytes == b'\xff\xff\xff\xff':    # no actuator id found
             return -1
-        else:
+        try:
             return int.from_bytes(ret_bytes, byteorder=BYTEORDER, signed=False)
+        except TypeError:
+            self._logger.error("Return value for drive cmd ({}) has incorrect type ({})".format(ret_bytes, type(ret_bytes)))
+            return -1       # fail
 
     def uart_tx_read(self, sensor_id:int):
         ret_bytes = self._uart_tx(
