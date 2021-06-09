@@ -365,7 +365,7 @@ def start_api_server(do_sem_init:bool=True, do_dal_init:bool=True, do_ioc_init:b
                 logger.error("IOC UART test echo didn't return a valid value")
             else:
                 logger.debug("IOC UART echo successful")
-            #ioc.start_read_thr()
+            ioc.start_read_thr()
             """
             stop_ioc = threading.Event()
             ioc_thread = threading.Thread(target=, args=(stop_ioc,))

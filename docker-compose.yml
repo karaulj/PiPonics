@@ -84,9 +84,9 @@ services:
     devices:
       - "/dev/ttyAMA0:/dev/ttyAMA0"
 
-  # frontend:
-  #   build: './frontend-server-angular'
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "4200:${WEB_UI_PORT}"
+  frontend:
+    build: './frontend-server-angular'
+    depends_on:
+      - backend
+    ports:
+      - "4200:${WEB_UI_PORT}"

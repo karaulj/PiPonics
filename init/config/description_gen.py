@@ -38,7 +38,9 @@ def generate_entity_contents(json_data:dict) -> dict:
     for i, system in enumerate(systems):
         # system-specific actuator/sensor count
         actuator_cnt = 0
+        actuator_ids = []
         sensor_cnt = 0
+        sensor_ids = []
         # get system name
         try:
             sys_name = system[ch.KEY_NAME].replace('/', '')
@@ -86,7 +88,7 @@ def generate_entity_contents(json_data:dict) -> dict:
                     logger.debug("Found actuator #{}".format(k+1))
                     # get actuator type
                     try:
-                        actuator[ch.KEY_TYPE]
+                        actuator_type = actuator[ch.KEY_TYPE]
                     except KeyError:
                         logger.warning("No '{}' property found for system '{}', container '{}', actuator #{}".format(ch.KEY_TYPE, sys_name, container_name, k+1))
                         continue
@@ -104,8 +106,17 @@ def generate_entity_contents(json_data:dict) -> dict:
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_TANK_OR_CROP] = container_name
                     # add actuator id
-                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_ACTUATOR_ID] = actuator_cnt
-                    actuator_cnt += 1
+                    try:
+                        actuator_id = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_ACTUATOR_ID]
+                        if actuator_id in actuator_ids:
+                            logger.error("Repeated actuator ID '{}' found for system '{}', container '{}', actuator '{}'".format(actuator_id, sys_name, container_name, actuator_type))
+                    except KeyError:
+                        while actuator_cnt in actuator_ids:
+                            actuator_cnt += 1
+                        actuator_id = actuator_cnt
+                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_ACTUATORS][k][ch.KEY_ACTUATOR_ID] = actuator_id
+                        actuator_cnt += 1
+                    actuator_ids.append(actuator_id)
 
                 # find sensors
                 try:
@@ -136,8 +147,17 @@ def generate_entity_contents(json_data:dict) -> dict:
                     # add container name
                     entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_TANK_OR_CROP] = container_name
                     # add sensor id
-                    entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSOR_ID] = sensor_cnt
-                    sensor_cnt += 1
+                    try:
+                        sensor_id = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSOR_ID]
+                        if sensor_id in sensor_ids:
+                            logger.error("Repeated sensor ID '{}' found for system '{}', container '{}', sensor '{}'".format(sensor_id, sys_name, container_name, sensor_type))
+                    except KeyError:
+                        while sensor_cnt in sensor_ids:
+                            sensor_cnt += 1
+                        sensor_id = sensor_cnt
+                        entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS][k][ch.KEY_SENSOR_ID] = sensor_id
+                        sensor_cnt += 1
+                    sensor_ids.append(sensor_id)
 
                 # delete empty sensors from list (if any)
                 all_sensors = entity_lookup[ch.KEY_SYSTEMS][i][container_type][j][ch.KEY_SENSORS]
